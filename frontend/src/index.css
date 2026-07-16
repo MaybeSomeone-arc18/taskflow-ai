@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 95%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 6% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 50%;
+    --accent: 240 4% 12%;
+    --accent-foreground: 0 0% 80%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 4% 13%;
+    --input: 240 4% 12%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 95%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 6% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 50%;
+    --accent: 240 4% 12%;
+    --accent-foreground: 0 0% 80%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 4% 13%;
+    --input: 240 4% 12%;
+    --ring: 243 75% 59%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: #e0e7ff;
+  }
+}
+
+/* ====================================================
+   ANIMATIONS
+   ==================================================== */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in     { animation: fade-in 0.25s ease-out both; }
+.animate-slide-left  { animation: slide-in-left 0.25s ease-out both; }
+.animate-scale-up    { animation: scale-in 0.2s ease-out both; }
+.animate-skeleton    { animation: skeleton-pulse 1.8s ease-in-out infinite; }
+.animate-spin-slow   { animation: spin-slow 3s linear infinite; }
+
+/* ====================================================
+   SCROLLBARS
+   ==================================================== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(113, 113, 122, 0.6); }
+
+/* ====================================================
+   GLASSMORPHISM SURFACE
+   ==================================================== */
+.glass {
+  background: rgba(9, 9, 11, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ====================================================
+   SKELETON LOADING
+   ==================================================== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(39, 39, 42, 0.8) 25%,
+    rgba(63, 63, 70, 0.6) 50%,
+    rgba(39, 39, 42, 0.8) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ====================================================
+   KANBAN BOARD
+   ==================================================== */
+.kanban-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+.kanban-scroll::-webkit-scrollbar-track { background: transparent; }
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background: rgba(82, 82, 91, 0.5);
+  border-radius: 999px;
+}
+
+/* ====================================================
+   FORM FIELD FOCUS RINGS
+   ==================================================== */
+.field-base {
+  @apply w-full rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-3 text-sm text-zinc-100
+    placeholder:text-zinc-600 transition-all duration-200 outline-none
+    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20;
+}
+
+.field-base:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* ====================================================
+   PRIORITY BADGE COLORS
+   ==================================================== */
+.badge-critical { @apply bg-red-500/12 text-red-400 border-red-500/25 ring-red-500/20; }
+.badge-high     { @apply bg-amber-500/12 text-amber-400 border-amber-500/25; }
+.badge-medium   { @apply bg-blue-500/12 text-blue-400 border-blue-500/25; }
+.badge-low      { @apply bg-zinc-800/80 text-zinc-400 border-zinc-700; }
+
+/* ====================================================
+   STATUS BADGE COLORS
+   ==================================================== */
+.badge-todo        { @apply bg-indigo-500/10 text-indigo-400 border-indigo-500/25; }
+.badge-inprogress  { @apply bg-amber-500/10 text-amber-400 border-amber-500/25; }
+.badge-done        { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/25; }
+
+/* ====================================================
+   CARD HOVER LIFT EFFECT
+   ==================================================== */
+.card-hover {
+  @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 hover:border-zinc-700;
+}
+
+/* ====================================================
+   BUTTON PRESS EFFECT
+   ==================================================== */
+.btn-press {
+  @apply transition-all duration-100 active:scale-[0.98] active:opacity-90;
+}
+
+/* ====================================================
+   SIDEBAR ACTIVE INDICATOR
+   ==================================================== */
+.nav-active-bar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #6366f1;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ====================================================
+   CHART TOOLTIPS
+   ==================================================== */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+.recharts-default-tooltip {
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+}
+.recharts-tooltip-label {
+  color: #a1a1aa !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+.recharts-tooltip-item {
+  color: #e4e4e7 !important;
+}
+
+/* ====================================================
+   INPUT DATE ICON DARK OVERRIDE
+   ==================================================== */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(60%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(80%);
+  cursor: pointer;
+}
