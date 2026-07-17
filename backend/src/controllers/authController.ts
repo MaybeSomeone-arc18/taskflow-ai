@@ -3,6 +3,7 @@ import { generateToken } from '../utils/jwt';
 import * as authService from '../services/authService';
 import { sendSuccess } from '../utils/response';
 import asyncHandler from '../utils/asyncHandler';
+import AppError from '../utils/AppError';
 
 // @desc    Register a new user
 // @route   POST /api/v1/auth/register
@@ -60,7 +61,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 // @access  Private
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    throw new Error('User context missing');
+    throw new AppError('User context missing', 401);
   }
 
   sendSuccess(

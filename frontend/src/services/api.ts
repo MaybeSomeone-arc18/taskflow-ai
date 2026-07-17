@@ -23,18 +23,34 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to manage sessions
+// Response interceptor to manage sessions and propagate real error messages
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+    // Extract the backend's actual error message from the response body
+    const backendMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message;
+
+    // Only auto-redirect on 401 when NOT on auth pages (avoid swallowing login errors)
+    if (error.response?.status === 401) {
+      const isOnAuthPage =
+        window.location.pathname === '/login' ||
+        window.location.pathname === '/signup';
+
+      if (!isOnAuthPage) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
+
+    // Re-throw with the backend message so catch blocks in components show real errors
+    const enrichedError = new Error(backendMessage);
+    (enrichedError as any).response = error.response;
+    (enrichedError as any).status = error.response?.status;
+    return Promise.reject(enrichedError);
   }
 );
 
