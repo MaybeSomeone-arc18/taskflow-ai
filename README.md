@@ -1,7 +1,4 @@
 <div align="center">
-  <img src="docs/images/banner.png" alt="TaskFlow AI Banner" width="100%" />
-  
-  *Place a stunning 1200x400px hero image at `docs/images/banner.png`*
   
   # 🚀 TaskFlow AI
   
