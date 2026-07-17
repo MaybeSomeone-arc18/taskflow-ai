@@ -4,6 +4,7 @@ import { Project } from '../types';
 import { Link, useLocation, useNavigate, useParams, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
   BarChart3,
@@ -12,8 +13,6 @@ import {
   LogOut,
   Menu,
   Moon,
-  Plus,
-  Settings as SettingsIcon,
   Sun,
   X,
   Bell,
@@ -21,9 +20,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  FolderOpen,
-  Hash,
+  Settings as SettingsIcon,
 } from 'lucide-react';
+import { Avatar } from '../components/ui/Avatar';
+import { GlobalSearch } from '../components/ui/GlobalSearch';
+import { NotificationDropdown } from '../components/ui/NotificationDropdown';
+import { cn } from '../utils/cn';
 
 export const DashboardLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -65,9 +67,9 @@ export const DashboardLayout: React.FC = () => {
   };
 
   const navLinks = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Overview', path: '/', icon: LayoutDashboard },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
-    { name: 'AI Suite', path: '/ai-planner', icon: Brain },
+    { name: 'AI Planner', path: '/ai-planner', icon: Brain },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ];
 
@@ -76,12 +78,12 @@ export const DashboardLayout: React.FC = () => {
     const crumbs: { label: string; path?: string }[] = [{ label: 'Home', path: '/' }];
 
     if (paths.length === 0) {
-      crumbs.push({ label: 'Dashboard' });
+      crumbs.push({ label: 'Overview' });
       return crumbs;
     }
 
     if (paths[0] === 'analytics') crumbs.push({ label: 'Analytics' });
-    else if (paths[0] === 'ai-planner') crumbs.push({ label: 'AI Suite' });
+    else if (paths[0] === 'ai-planner') crumbs.push({ label: 'AI Planner' });
     else if (paths[0] === 'settings') crumbs.push({ label: 'Settings' });
     else if (paths[0] === 'projects' && paths[1]) {
       const activeProj = projects.find((p) => p._id === paths[1]);
@@ -93,112 +95,123 @@ export const DashboardLayout: React.FC = () => {
     return crumbs;
   };
 
-  const userInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U';
-
-  const SidebarContent = ({ forceOpenLabels = false }: { forceOpenLabels?: boolean }) => {
+  const renderSidebarContent = (forceOpenLabels = false) => {
     const showLabels = !isCollapsed || forceOpenLabels;
 
     return (
-      <div className="flex h-full flex-col bg-zinc-950 border-r border-zinc-900">
+      <div className="flex h-full flex-col bg-transparent">
         {/* Logo area */}
-        <div className={`flex items-center ${showLabels ? 'justify-between' : 'justify-center'} px-4 h-14 border-b border-zinc-900 shrink-0`}>
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 shadow-md shadow-indigo-900/50">
-              <Activity className="h-3.5 w-3.5 text-white" />
+        <div className={cn("flex items-center px-4 h-14 shrink-0 transition-all", showLabels ? "justify-between" : "justify-center")}>
+          <Link to="/" className="flex items-center gap-2.5 overflow-hidden">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/30">
+              <Activity className="h-4 w-4 text-content-inverse" />
             </div>
             {showLabels && (
-              <span className="text-sm font-bold tracking-tight text-white truncate">TaskFlow AI</span>
+              <motion.span 
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                className="text-sm font-bold tracking-tight text-content whitespace-nowrap"
+              >
+                TaskFlow AI
+              </motion.span>
             )}
-          </div>
+          </Link>
           {showLabels && !forceOpenLabels && (
             <button
               onClick={toggleCollapse}
-              className="hidden lg:flex items-center justify-center h-6 w-6 rounded-md hover:bg-zinc-800 text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="hidden lg:flex items-center justify-center h-6 w-6 rounded-md hover:bg-surface-hover text-content-muted hover:text-content transition-colors"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
           )}
         </div>
 
         {/* Nav section */}
-        <div className="flex-1 overflow-y-auto py-4 px-2 space-y-5">
-          {/* Main nav */}
-          <div className="space-y-0.5">
-            {showLabels && (
-              <div className="px-2 mb-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-700">Navigation</span>
-              </div>
-            )}
+        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
+          <div className="space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = link.path === '/'
                 ? location.pathname === '/'
                 : location.pathname.startsWith(link.path);
+              
               return (
                 <Link
                   key={link.name}
                   to={link.path}
-                  className={[
-                    'relative flex items-center rounded-lg transition-all duration-150 group',
-                    showLabels ? 'gap-2.5 px-2.5 py-2' : 'justify-center p-2.5',
+                  className={cn(
+                    'relative flex items-center rounded-xl transition-all duration-300 group h-10',
+                    showLabels ? 'px-3' : 'justify-center',
                     isActive
-                      ? 'bg-indigo-500/10 text-indigo-400'
-                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900',
-                  ].join(' ')}
+                      ? 'text-content bg-surface-hover font-medium shadow-sm border border-border-subtle'
+                      : 'text-content-secondary hover:text-content hover:bg-surface hover:translate-x-[3px]'
+                  )}
                   title={!showLabels ? link.name : undefined}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-r-full" />
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
                   )}
-                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-indigo-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />
-                  {showLabels && <span className="text-sm font-medium">{link.name}</span>}
+                  <Icon className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-primary' : 'text-content-muted group-hover:text-content-secondary')} />
+                  {showLabels && (
+                    <motion.span 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="ml-3 text-sm truncate"
+                    >
+                      {link.name}
+                    </motion.span>
+                  )}
                 </Link>
               );
             })}
           </div>
 
           {/* Projects section */}
-          <div className="space-y-0.5">
-            {showLabels && (
-              <div className="px-2 mb-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-700">Projects</span>
+          <div className="space-y-1">
+            {showLabels ? (
+              <div className="px-3 mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-content-muted">Your Projects</span>
               </div>
-            )}
-            {!showLabels && (
-              <div className="mx-2 h-px bg-zinc-900 my-1" />
+            ) : (
+              <div className="mx-3 h-px bg-border-subtle my-2" />
             )}
 
-            {projects.length === 0 && showLabels && (
-              <div className="px-2.5 py-2 rounded-lg border border-dashed border-zinc-800 mx-0.5">
-                <p className="text-xs text-zinc-700 text-center">No active projects</p>
-              </div>
-            )}
-
-            <div className="max-h-48 overflow-y-auto space-y-0.5 kanban-scroll">
+            <div className="max-h-64 overflow-y-auto space-y-1 scrollbar-none">
               {projects.map((proj) => {
                 const isActive = projectId === proj._id;
                 return (
                   <Link
                     key={proj._id}
                     to={`/projects/${proj._id}`}
-                    className={[
-                      'relative flex items-center rounded-lg transition-all duration-150 group',
-                      showLabels ? 'gap-2.5 px-2.5 py-2' : 'justify-center p-2.5',
+                    className={cn(
+                      'relative flex items-center rounded-xl transition-all duration-300 group h-10',
+                      showLabels ? 'px-3' : 'justify-center',
                       isActive
-                        ? 'bg-zinc-800/70 text-zinc-200'
-                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900',
-                    ].join(' ')}
+                        ? 'bg-surface-hover text-content font-medium shadow-sm border border-border-subtle'
+                        : 'text-content-secondary hover:text-content hover:bg-surface hover:translate-x-[3px]'
+                    )}
                     title={proj.title}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-r-full" />
+                      <motion.div
+                        layoutId="activeProject"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
                     )}
                     <span
-                      className="h-2 w-2 rounded-sm shrink-0"
-                      style={{ backgroundColor: proj.color }}
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{ backgroundColor: proj.color, boxShadow: isActive ? `0 0 8px ${proj.color}80` : 'none' }}
                     />
                     {showLabels && (
-                      <span className="text-xs font-medium truncate">{proj.title}</span>
+                      <span className="ml-3 text-sm truncate">{proj.title}</span>
                     )}
                   </Link>
                 );
@@ -208,62 +221,44 @@ export const DashboardLayout: React.FC = () => {
         </div>
 
         {/* Footer / User section */}
-        <div className="border-t border-zinc-900 p-3 shrink-0 space-y-2">
-          {/* User profile row */}
-          <div className={`flex items-center ${showLabels ? 'gap-2.5 justify-between' : 'justify-center'}`}>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm">
-                {userInitial}
-              </div>
+        <div className="border-t border-border-subtle p-3 shrink-0">
+          <div className={cn("flex items-center", showLabels ? "justify-between" : "flex-col gap-3")}>
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar 
+                fallback={user?.fullName || 'User'} 
+                size="md" 
+                className="ring-1 ring-border-subtle"
+              />
               {showLabels && (
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-zinc-300 truncate leading-tight">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-content truncate">
                     {user?.fullName || 'User'}
                   </p>
-                  <p className="text-[10px] text-zinc-600 truncate leading-tight mt-0.5">
-                    {user?.email || ''}
+                  <p className="text-[10px] text-content-muted truncate">
+                    Workspace Owner
                   </p>
                 </div>
               )}
             </div>
-            {showLabels && (
-              <button
-                onClick={handleLogout}
-                className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-red-400 transition-colors shrink-0"
-                title="Sign out"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Bottom controls */}
-          <div className={`flex items-center ${showLabels ? 'justify-between' : 'flex-col gap-1.5'} border-t border-zinc-900/60 pt-2`}>
-            <button
-              onClick={toggleTheme}
-              className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-zinc-300 transition-colors"
-              title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
-            >
-              {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-            </button>
-
-            {isCollapsed && !forceOpenLabels ? (
-              <button
-                onClick={toggleCollapse}
-                className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-zinc-300 transition-colors"
-                title="Expand sidebar"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="lg:hidden p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-red-400 transition-colors"
-                title="Sign out"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-              </button>
-            )}
+            
+            <div className={cn("flex items-center", showLabels ? "gap-2" : "flex-col gap-2")}>
+              {isCollapsed && !forceOpenLabels ? (
+                <button
+                  onClick={toggleCollapse}
+                  className="p-2.5 rounded-full hover:bg-surface-hover text-content-muted hover:text-content transition-colors apple-hover"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="p-2.5 rounded-full hover:bg-danger/10 text-content-muted hover:text-danger transition-colors apple-hover"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -271,106 +266,120 @@ export const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-zinc-950 text-zinc-100">
-      {/* Desktop Sidebar */}
-      <aside
-        className={[
-          'hidden lg:block shrink-0 h-full transition-all duration-300 ease-in-out',
-          isCollapsed ? 'w-[56px]' : 'w-[220px]',
-        ].join(' ')}
+    <div className="flex h-screen w-screen overflow-hidden text-content font-sans selection:bg-primary/30">
+      {/* Desktop Sidebar (Floating effect) */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 88 : 260 }}
+        className="hidden lg:flex shrink-0 h-full py-6 pl-6"
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <SidebarContent />
-      </aside>
+        <div className="w-full h-full rounded-[24px] border border-border-subtle bg-panel backdrop-blur-2xl overflow-hidden flex flex-col shadow-2xl">
+          {renderSidebarContent()}
+        </div>
+      </motion.aside>
 
       {/* Main Area */}
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0 relative">
         {/* Top Navbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-900 bg-zinc-950 px-4 sm:px-6 gap-4">
-          {/* Left: mobile hamburger + breadcrumbs */}
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 gap-4 z-10">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-colors lg:hidden shrink-0"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border-subtle text-content-muted hover:text-content hover:bg-surface-hover transition-colors lg:hidden shrink-0"
             >
               <Menu className="h-4 w-4" />
             </button>
 
-            {/* Breadcrumbs */}
-            <nav className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-600 min-w-0">
+            <nav className="hidden sm:flex items-center gap-2 text-sm text-content-secondary min-w-0 font-medium">
               {getBreadcrumbs().map((crumb, idx) => (
                 <React.Fragment key={idx}>
-                  {idx > 0 && <span className="text-zinc-800">/</span>}
+                  {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-content-muted" />}
                   {crumb.path ? (
-                    <Link to={crumb.path} className="hover:text-zinc-400 transition-colors truncate">
+                    <Link to={crumb.path} className="hover:text-content transition-colors truncate">
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="text-zinc-300 font-semibold truncate">{crumb.label}</span>
+                    <span className="text-content truncate">{crumb.label}</span>
                   )}
                 </React.Fragment>
               ))}
             </nav>
           </div>
 
-          {/* Right: search + badge + notifications + user */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Search bar mockup */}
-            <div className="hidden md:flex items-center gap-2 h-8 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 px-3 text-zinc-600 cursor-not-allowed transition-colors">
-              <Search className="h-3.5 w-3.5 text-zinc-700" />
-              <span className="text-xs text-zinc-700 pr-4">Search...</span>
-              <kbd className="text-[10px] font-mono border border-zinc-800 bg-zinc-950 px-1.5 py-0.5 rounded-md text-zinc-600">⌘K</kbd>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden md:block">
+              <GlobalSearch />
             </div>
 
-            {/* AI Badge */}
-            <div className="hidden sm:flex items-center gap-1.5 h-7 rounded-lg border border-indigo-500/20 bg-indigo-500/8 px-2.5 text-xs font-semibold text-indigo-400">
-              <Sparkles className="h-3 w-3" />
-              <span>AI</span>
-            </div>
+            <Link
+              to="/ai-planner"
+              className="hidden sm:flex items-center gap-1.5 h-10 rounded-full border border-primary/20 bg-primary/10 hover:bg-primary/20 px-4 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-sm apple-hover backdrop-blur-md"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>AI Active</span>
+            </Link>
 
-            {/* Notifications */}
-            <button className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-colors">
-              <Bell className="h-3.5 w-3.5" />
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            <NotificationDropdown />
+
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 h-10 w-10 flex items-center justify-center rounded-full bg-surface-hover backdrop-blur-md border border-border-subtle shadow-sm hover:bg-surface text-content-secondary hover:text-content transition-colors apple-hover"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-
-            {/* User avatar */}
-            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xs font-bold text-white cursor-default">
-              {userInitial}
-            </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-zinc-950">
-          <div className="p-6 max-w-[1400px] mx-auto">
-            <Outlet />
-          </div>
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6 pt-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="h-full w-full max-w-[1600px] mx-auto rounded-[24px] border border-border-subtle bg-surface/60 overflow-hidden shadow-2xl relative backdrop-blur-md"
+          >
+            <div className="relative z-10 h-full overflow-y-auto custom-scrollbar p-8">
+              <Outlet />
+            </div>
+          </motion.div>
         </main>
       </div>
 
       {/* Mobile Drawer */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-50 flex lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
-          <div
-            className="relative w-[220px] h-full animate-slide-left shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SidebarContent forceOpenLabels={true} />
-          </div>
-          <div className="flex-1 flex items-start justify-end p-4">
-            <button
+      <AnimatePresence>
+        {isMobileOpen && (
+          <div className="fixed inset-0 z-50 flex lg:hidden">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm"
               onClick={() => setIsMobileOpen(false)}
-              className="mt-2 p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative w-[280px] h-full shadow-2xl shrink-0"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="h-4 w-4" />
-            </button>
+              {renderSidebarContent(true)}
+            </motion.div>
+            <div className="flex-1 flex items-start justify-end p-4">
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="mt-2 p-2 rounded-full bg-surface border border-border-subtle text-content-secondary hover:text-content"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -102,7 +102,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-zinc-950 text-zinc-400">
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-content-secondary">
         <div className="flex flex-col items-center space-y-2 animate-pulse">
           <span className="text-xs font-semibold">Verifying secure credentials...</span>
         </div>

@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Loading from './components/Loading';
 
 // Layouts
@@ -23,9 +24,10 @@ const Settings = lazy(() => import('./pages/Settings'));
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
+      <NotificationProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
             {/* Guest Authentication Screen Routes */}
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
@@ -77,9 +79,10 @@ export const App: React.FC = () => {
               
               <Route path="*" element={<NotFound />} />
             </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </NotificationProvider>
     </ThemeProvider>
   );
 };

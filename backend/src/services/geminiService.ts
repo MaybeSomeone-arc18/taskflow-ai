@@ -30,7 +30,9 @@ const executeGeminiRequest = async (prompt: string): Promise<string> => {
       attempts++;
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      if (text) return text;
+      if (text) {
+        return text.replace(/^```(?:json)?\n?/i, '').replace(/```$/i, '').trim();
+      }
       throw new Error('Empty response received from Gemini API');
     } catch (err) {
       console.warn(`[GEMINI WARNING] Attempt ${attempts} failed: ${(err as Error).message}`);

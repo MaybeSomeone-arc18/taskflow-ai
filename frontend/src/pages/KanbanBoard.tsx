@@ -9,31 +9,41 @@ import {
   deleteTask,
 } from '../services/taskService';
 import { Project, Task } from '../types';
+import { eventBus } from '../utils/eventBus';
 import AIPanel from '../components/AIPanel';
 import {
   AlertCircle,
   ArrowLeft,
+  CheckCircle2,
   Filter,
-  Loader2,
   Plus,
   Search,
   Trash2,
   X,
+  PlusCircle,
+  FolderDot
 } from 'lucide-react';
-import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
-import { Badge, getPriorityVariant, getStatusVariant } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
+import { Badge } from '../components/ui/Badge';
+import { Input } from '../components/ui/Input';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Skeleton } from '../components/ui/LoadingSkeleton';
+import { PageHeader } from '../components/ui/PageHeader';
+import { motion } from 'framer-motion';
+import { cn } from '../utils/cn';
 
-const STATUS_COLUMNS: { name: Task['status']; dotColor: string; headerColor: string }[] = [
-  { name: 'Todo',        dotColor: 'bg-indigo-400',  headerColor: 'text-indigo-400'  },
-  { name: 'In Progress', dotColor: 'bg-amber-400',   headerColor: 'text-amber-400'   },
-  { name: 'Completed',   dotColor: 'bg-emerald-400', headerColor: 'text-emerald-400' },
+const STATUS_COLUMNS: { name: Task['status']; dotColor: string; headerColor: string; borderColor: string; bgColor: string }[] = [
+  { name: 'Todo',        dotColor: 'bg-content-muted',  headerColor: 'text-content-secondary', borderColor: 'border-border-subtle', bgColor: 'bg-surface/50' },
+  { name: 'In Progress', dotColor: 'bg-primary',  headerColor: 'text-primary', borderColor: 'border-primary/20', bgColor: 'bg-primary/5' },
+  { name: 'Completed',   dotColor: 'bg-emerald-500', headerColor: 'text-emerald-500', borderColor: 'border-emerald-500/20', bgColor: 'bg-emerald-500/5' },
 ];
 
 const PRIORITIES: Task['priority'][] = ['Low', 'Medium', 'High', 'Critical'];
 
-const FIELD = 'w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all';
-const LABEL = 'text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-1.5';
+const LABEL = 'text-xs font-semibold text-content-muted uppercase tracking-widest block mb-1.5';
+const SELECT = 'flex h-11 w-full rounded-xl border border-border-subtle bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all duration-200';
+const TEXTAREA = 'flex w-full rounded-xl border border-border-subtle bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all duration-200 resize-none';
 
 export const KanbanBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -92,18 +102,18 @@ export const KanbanBoard: React.FC = () => {
     fetchProjDetails();
   }, [projectId]);
 
-  const fetchTasksList = async () => {
+  const fetchTasksList = useCallback(async () => {
     if (!projectId) return;
     setTasksLoading(true); setTasksError(null);
     try {
-      const filters = { search: debouncedSearch.trim() || undefined, priority: priorityFilter !== 'All' ? priorityFilter : undefined, status: statusFilter !== 'All' ? statusFilter : undefined, page: currentPage, limit: 15, sortBy, sortOrder };
+      const filters = { search: debouncedSearch.trim() || undefined, priority: priorityFilter !== 'All' ? priorityFilter : undefined, status: statusFilter !== 'All' ? statusFilter : undefined, page: currentPage, limit: 30, sortBy, sortOrder };
       const data = await getProjectTasks(projectId, filters);
       setTasks(data.tasks); setTotalPages(data.pages); setTotalCount(data.total);
     } catch (err) { setTasksError((err as Error).message); }
     finally { setTasksLoading(false); }
-  };
+  }, [projectId, debouncedSearch, priorityFilter, statusFilter, sortBy, sortOrder, currentPage]);
 
-  useEffect(() => { fetchTasksList(); }, [projectId, debouncedSearch, priorityFilter, statusFilter, sortBy, sortOrder, currentPage]);
+  useEffect(() => { fetchTasksList(); }, [fetchTasksList]);
 
   const handleCreateTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +125,15 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       const parsedTags = tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
-      await createTask({ title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags, projectId: projectId as any });
+      const createdTask = await createTask({ title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags, projectId: projectId as any });
+      eventBus.emit('new_notification', {
+        title: 'Task Created',
+        message: `Task "${createdTask.title}" was successfully added to ${project?.title}.`,
+        type: 'task',
+        link: `/project/${projectId}`
+      });
+      eventBus.emit('refresh_dashboard');
+      eventBus.emit('refresh_analytics');
       setIsCreateOpen(false);
       setTitle(''); setDescription(''); setStatus('Todo'); setPriority('Medium'); setDueDate(''); setEstimatedHours(0); setActualHours(0); setTagsInput('');
       fetchTasksList();
@@ -127,6 +145,19 @@ export const KanbanBoard: React.FC = () => {
     try {
       await updateTask(taskId, { status: nextStatus });
       setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: nextStatus } : t)));
+      if (nextStatus === 'Completed') {
+        const t = tasks.find(x => x._id === taskId);
+        if (t) {
+          eventBus.emit('new_notification', {
+            title: 'Task Completed',
+            message: `Task "${t.title}" was marked as completed.`,
+            type: 'task',
+            link: `/project/${projectId}`
+          });
+        }
+      }
+      eventBus.emit('refresh_dashboard');
+      eventBus.emit('refresh_analytics');
     } catch (err) { console.error('Failed to change status:', err); }
   }, []);
 
@@ -147,7 +178,17 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       const parsedTags = tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
-      await updateTask(selectedTask._id, { title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags });
+      const updatedTask = await updateTask(selectedTask._id, { title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags });
+      if (status === 'Completed' && selectedTask.status !== 'Completed') {
+        eventBus.emit('new_notification', {
+          title: 'Task Completed',
+          message: `Task "${updatedTask.title}" was marked as completed.`,
+          type: 'task',
+          link: `/project/${projectId}`
+        });
+      }
+      eventBus.emit('refresh_dashboard');
+      eventBus.emit('refresh_analytics');
       setIsEditOpen(false); setSelectedTask(null); fetchTasksList();
     } catch (err) { setActionError((err as Error).message); }
     finally { setActionLoading(false); }
@@ -160,6 +201,14 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       await deleteTask(selectedTask._id);
+      eventBus.emit('new_notification', {
+        title: 'Task Deleted',
+        message: `Task "${selectedTask.title}" was deleted.`,
+        type: 'task',
+        link: `/project/${projectId}`
+      });
+      eventBus.emit('refresh_dashboard');
+      eventBus.emit('refresh_analytics');
       setIsDeleteOpen(false); setSelectedTask(null); fetchTasksList();
     } catch (err) { setActionError((err as Error).message); }
     finally { setActionLoading(false); }
@@ -167,10 +216,15 @@ export const KanbanBoard: React.FC = () => {
 
   if (projLoading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-indigo-500" />
-          <span className="text-xs text-zinc-500">Loading project...</span>
+      <div className="space-y-6">
+        <Skeleton className="h-20 w-full" />
+        <div className="grid gap-6 lg:grid-cols-4">
+          <div className="lg:col-span-3 grid md:grid-cols-3 gap-4">
+            <Skeleton className="h-[600px] rounded-2xl" />
+            <Skeleton className="h-[600px] rounded-2xl" />
+            <Skeleton className="h-[600px] rounded-2xl" />
+          </div>
+          <Skeleton className="h-[600px] rounded-2xl" />
         </div>
       </div>
     );
@@ -178,39 +232,34 @@ export const KanbanBoard: React.FC = () => {
 
   if (projError || !project) {
     return (
-      <div className="space-y-4 max-w-md mx-auto py-12">
-        <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/8 p-4 text-sm text-red-400">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span>{projError || 'Project not found.'}</span>
-        </div>
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Dashboard
-        </Link>
-      </div>
+      <EmptyState
+        icon={AlertCircle}
+        title="Project not found"
+        description={projError || "The project you're looking for doesn't exist or you don't have access."}
+        action={{ label: "Back to Dashboard", onClick: () => window.history.back() }}
+      />
     );
   }
 
-  // Task form fields (reused in create + edit modal)
-  const TaskFormFields = () => (
+  const renderTaskFormFields = () => (
     <div className="space-y-4">
       {actionError && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/8 p-3 text-sm text-red-400">
+        <div className="flex items-center gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
           <AlertCircle className="h-4 w-4 shrink-0" /> {actionError}
         </div>
       )}
       <div>
         <label className={LABEL}>Task Title</label>
-        <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Implement Register API" className={FIELD} />
+        <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Implement Register API" />
       </div>
       <div>
         <label className={LABEL}>Description</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details about task checkpoints..." rows={3} className={`${FIELD} resize-none`} />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details about task checkpoints..." rows={3} className={TEXTAREA} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={LABEL}>Status</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value as Task['status'])} className={FIELD}>
+          <select value={status} onChange={(e) => setStatus(e.target.value as Task['status'])} className={SELECT}>
             <option value="Todo">Todo</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
@@ -218,193 +267,200 @@ export const KanbanBoard: React.FC = () => {
         </div>
         <div>
           <label className={LABEL}>Priority</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value as Task['priority'])} className={FIELD}>
+          <select value={priority} onChange={(e) => setPriority(e.target.value as Task['priority'])} className={SELECT}>
             {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={LABEL}>Est. Hours</label>
-          <input type="number" min={0} step="0.5" value={estimatedHours} onChange={(e) => setEstimatedHours(parseFloat(e.target.value) || 0)} className={FIELD} />
+          <Input type="number" min={0} step="0.5" value={estimatedHours} onChange={(e) => setEstimatedHours(parseFloat(e.target.value) || 0)} />
         </div>
         <div>
           <label className={LABEL}>Act. Hours</label>
-          <input type="number" min={0} step="0.5" value={actualHours} onChange={(e) => setActualHours(parseFloat(e.target.value) || 0)} className={FIELD} />
+          <Input type="number" min={0} step="0.5" value={actualHours} onChange={(e) => setActualHours(parseFloat(e.target.value) || 0)} />
         </div>
       </div>
       <div>
         <label className={LABEL}>Due Date</label>
-        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={FIELD} />
+        <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
       </div>
       <div>
-        <label className={LABEL}>Tags <span className="text-zinc-700 normal-case font-normal">(comma-separated)</span></label>
-        <input type="text" placeholder="e.g. backend, bug, milestone1" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} className={FIELD} />
+        <label className={LABEL}>Tags <span className="text-content-muted normal-case font-normal">(comma-separated)</span></label>
+        <Input type="text" placeholder="e.g. backend, bug, milestone1" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* ─── Project Header Card ─── */}
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900">
-        {/* Color strip */}
-        <div className="absolute top-0 inset-x-0 h-0.5" style={{ backgroundColor: project.color }} />
-        <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors">
-              <ArrowLeft className="h-3.5 w-3.5" />
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6 h-full flex flex-col"
+    >
+      {/* ─── Project Header ─── */}
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface/50 shrink-0 shadow-lg">
+        <div className="absolute top-0 inset-x-0 h-1" style={{ backgroundColor: project.color }} />
+        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-xl border border-border-subtle bg-surface hover:bg-surface-hover text-content-muted hover:text-content transition-colors shadow-sm">
+              <ArrowLeft className="h-4 w-4" />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: project.color }} />
-                <h1 className="text-lg font-bold tracking-tight text-white">{project.title}</h1>
-                <Badge variant="status-todo" dot>Active</Badge>
+              <div className="flex items-center gap-2.5">
+                <div className="h-3 w-3 rounded-md shadow-sm" style={{ backgroundColor: project.color }} />
+                <h1 className="text-xl font-bold tracking-tight text-content">{project.title}</h1>
+                <Badge variant="status-todo" dot>Active Workspace</Badge>
               </div>
               {project.description && (
-                <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{project.description}</p>
+                <p className="text-sm text-content-secondary mt-1 max-w-2xl">{project.description}</p>
               )}
             </div>
           </div>
           <Button
             variant="primary"
-            size="sm"
-            icon={<Plus className="h-3.5 w-3.5" />}
+            icon={<PlusCircle className="h-4 w-4" />}
             onClick={() => { setActionError(null); setIsCreateOpen(true); }}
           >
-            New Task
+            Create Task
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4 items-start">
+      <div className="flex-1 min-h-0 grid gap-6 lg:grid-cols-4 items-start">
         {/* ─── Board + Filters (3/4) ─── */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:col-span-3 flex flex-col h-full gap-5">
           {/* Filter Bar */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900 p-4">
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <Filter className="h-3.5 w-3.5" />
-              <span className="font-medium uppercase tracking-wider">Filters</span>
-              {(priorityFilter !== 'All' || statusFilter !== 'All' || search) && (
-                <button
-                  onClick={() => { setPriorityFilter('All'); setStatusFilter('All'); setSearch(''); }}
-                  className="ml-auto text-zinc-600 hover:text-zinc-400 transition-colors flex items-center gap-1"
-                >
-                  <X className="h-3 w-3" /> Clear
-                </button>
-              )}
+          <div className="flex flex-col xl:flex-row gap-3 rounded-2xl border border-border-subtle bg-surface p-4 shrink-0">
+            <div className="flex items-center gap-2 text-sm text-content-muted xl:w-24 shrink-0">
+              <Filter className="h-4 w-4" />
+              <span className="font-semibold uppercase tracking-widest text-[11px]">Filters</span>
             </div>
-            <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-              {/* Search */}
+            
+            <div className="flex-1 grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 items-center">
               <div className="relative sm:col-span-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-600 pointer-events-none" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search tasks..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none transition-all"
+                  leftIcon={<Search className="h-4 w-4" />}
                 />
               </div>
-              {/* Priority */}
-              <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value); setCurrentPage(1); }} className="rounded-xl border border-zinc-800 bg-zinc-950 py-2 px-3 text-sm text-zinc-400 focus:border-indigo-500 focus:outline-none">
+              <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value); setCurrentPage(1); }} className={SELECT}>
                 <option value="All">All Priorities</option>
                 {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
-              {/* Status */}
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="rounded-xl border border-zinc-800 bg-zinc-950 py-2 px-3 text-sm text-zinc-400 focus:border-indigo-500 focus:outline-none">
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className={SELECT}>
                 <option value="All">All Statuses</option>
                 <option value="Todo">Todo</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Completed">Completed</option>
               </select>
-              {/* Sort */}
-              <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }} className="rounded-xl border border-zinc-800 bg-zinc-950 py-2 px-3 text-sm text-zinc-400 focus:border-indigo-500 focus:outline-none">
+              <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }} className={SELECT}>
                 <option value="createdAt">Created Date</option>
                 <option value="dueDate">Due Date</option>
                 <option value="priority">Priority</option>
               </select>
             </div>
-            {totalCount > 0 && (
-              <p className="text-[11px] text-zinc-600">
-                {totalCount} task{totalCount !== 1 ? 's' : ''} found
-              </p>
+
+            {(priorityFilter !== 'All' || statusFilter !== 'All' || search) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setPriorityFilter('All'); setStatusFilter('All'); setSearch(''); }}
+                className="xl:ml-auto whitespace-nowrap"
+                icon={<X className="h-4 w-4" />}
+              >
+                Clear Filters
+              </Button>
             )}
           </div>
 
-          {/* Error banner */}
           {tasksError && (
-            <div className="flex items-center gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/8 p-4 text-sm text-red-400">
+            <div className="flex items-center gap-2.5 rounded-2xl border border-danger/20 bg-danger/10 p-4 text-sm text-danger shrink-0">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>Error loading tasks: {tasksError}</span>
             </div>
           )}
 
           {/* Kanban Columns */}
-          {tasksLoading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {STATUS_COLUMNS.map((col) => (
-                <div key={col.name} className="rounded-2xl border border-zinc-800/80 bg-zinc-900 p-4 space-y-3">
-                  <div className="skeleton h-5 w-24 rounded-lg" />
-                  {Array.from({ length: 2 }).map((_, i) => <div key={i} className="skeleton h-28 rounded-xl" />)}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {STATUS_COLUMNS.map((col) => {
-                const colTasks = tasks.filter((t) => t.status === col.name);
-                return (
-                  <div key={col.name} className="flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900 overflow-hidden">
-                    {/* Column header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${col.dotColor}`} />
-                        <span className={`text-xs font-semibold ${col.headerColor}`}>{col.name}</span>
-                      </div>
-                      <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-800/60 border border-zinc-800 rounded-full px-2 py-0.5">
-                        {colTasks.length}
-                      </span>
-                    </div>
-
-                    {/* Task cards */}
-                    <div className="flex-1 p-3 space-y-2.5 overflow-y-auto max-h-[580px] kanban-scroll">
-                      {colTasks.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
-                          <div className="h-10 w-10 rounded-xl bg-zinc-800/60 flex items-center justify-center">
-                            <span className="text-lg">✓</span>
-                          </div>
-                          <p className="text-xs text-zinc-600">No tasks here.</p>
-                        </div>
-                      ) : (
-                        colTasks.map((task) => (
-                          <TaskCard
-                            key={task._id}
-                            task={task}
-                            onEdit={handleEditInit}
-                            onDelete={handleDeleteInit}
-                            onStatusChange={handleStatusQuickChange}
-                          />
-                        ))
-                      )}
-                    </div>
+          <div className="flex-1 min-h-0">
+            {tasksLoading ? (
+              <div className="grid gap-4 md:grid-cols-3 h-full">
+                {STATUS_COLUMNS.map((col) => (
+                  <div key={col.name} className="rounded-2xl border border-border-subtle bg-surface/50 p-4 flex flex-col gap-4">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-3 h-full">
+                {STATUS_COLUMNS.map((col) => {
+                  const colTasks = tasks.filter((t) => t.status === col.name);
+                  return (
+                    <div key={col.name} className={cn("flex flex-col rounded-2xl border h-full max-h-[800px]", col.borderColor, col.bgColor)}>
+                      {/* Column header */}
+                      <div className="flex items-center justify-between p-4 pb-3 border-b border-border-subtle shrink-0 sticky top-0 bg-inherit z-10 rounded-t-2xl">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`h-2.5 w-2.5 rounded-full shadow-sm ${col.dotColor}`} />
+                          <span className={cn("text-sm font-bold tracking-tight", col.headerColor)}>{col.name}</span>
+                        </div>
+                        <Badge variant="secondary" className="px-2 py-0.5 text-[10px]">{colTasks.length}</Badge>
+                      </div>
 
-          {/* Pagination */}
-          {!tasksLoading && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-zinc-600">
-                Page {currentPage} of {totalPages} · {totalCount} total
+                      {/* Task cards */}
+                      <div className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-3">
+                        {colTasks.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-full py-10 gap-3 text-center opacity-60">
+                            <div className="h-12 w-12 rounded-2xl border border-dashed border-border-subtle flex items-center justify-center bg-surface/50">
+                              <CheckCircle2 className="h-5 w-5 text-content-muted" />
+                            </div>
+                            <p className="text-sm font-medium text-content-muted">Drop tasks here</p>
+                          </div>
+                        ) : (
+                          colTasks.map((task) => (
+                            <TaskCard
+                              key={task._id}
+                              task={task}
+                              onEdit={handleEditInit}
+                              onDelete={handleDeleteInit}
+                              onStatusChange={handleStatusQuickChange}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border-subtle pt-4 shrink-0">
+              <span className="text-sm text-content-muted font-medium">
+                Showing page <strong className="text-content">{currentPage}</strong> of <strong className="text-content">{totalPages}</strong> ({totalCount} total tasks)
               </span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="xs" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage === 1 || tasksLoading}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                >
                   Previous
                 </Button>
-                <Button variant="outline" size="xs" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage === totalPages || tasksLoading}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                >
                   Next
                 </Button>
               </div>
@@ -413,7 +469,7 @@ export const KanbanBoard: React.FC = () => {
         </div>
 
         {/* ─── AI Panel (1/4) ─── */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 h-full">
           <AIPanel projectId={project._id} />
         </div>
       </div>
@@ -423,17 +479,15 @@ export const KanbanBoard: React.FC = () => {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         title="New Task"
-        subtitle={`Adding to: ${project.title}`}
+        subtitle={`Adding to workspace: ${project.title}`}
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-            <Button variant="primary" size="sm" loading={actionLoading} onClick={handleCreateTaskSubmit as any}>
-              Create Task
-            </Button>
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+            <Button variant="primary" loading={actionLoading} onClick={handleCreateTaskSubmit as any}>Create Task</Button>
           </div>
         }
       >
-        <form onSubmit={handleCreateTaskSubmit}><TaskFormFields /></form>
+        <form onSubmit={handleCreateTaskSubmit} className="space-y-5">{renderTaskFormFields()}</form>
       </Modal>
 
       {/* ─── Edit Task Modal ─── */}
@@ -444,14 +498,12 @@ export const KanbanBoard: React.FC = () => {
         subtitle={`Editing: ${selectedTask?.title}`}
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => { setIsEditOpen(false); setSelectedTask(null); }}>Cancel</Button>
-            <Button variant="primary" size="sm" loading={actionLoading} onClick={handleUpdateTaskSubmit as any}>
-              Save Changes
-            </Button>
+            <Button variant="ghost" onClick={() => { setIsEditOpen(false); setSelectedTask(null); }}>Cancel</Button>
+            <Button variant="primary" loading={actionLoading} onClick={handleUpdateTaskSubmit as any}>Save Changes</Button>
           </div>
         }
       >
-        <form onSubmit={handleUpdateTaskSubmit}><TaskFormFields /></form>
+        <form onSubmit={handleUpdateTaskSubmit} className="space-y-5">{renderTaskFormFields()}</form>
       </Modal>
 
       {/* ─── Delete Task Modal ─── */}
@@ -462,26 +514,26 @@ export const KanbanBoard: React.FC = () => {
         maxWidth="sm"
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" disabled={actionLoading} onClick={() => { setIsDeleteOpen(false); setSelectedTask(null); }}>Cancel</Button>
-            <Button variant="danger" size="sm" loading={actionLoading} onClick={handleDeleteSubmit}>Delete</Button>
+            <Button variant="ghost" disabled={actionLoading} onClick={() => { setIsDeleteOpen(false); setSelectedTask(null); }}>Cancel</Button>
+            <Button variant="danger" loading={actionLoading} onClick={handleDeleteSubmit}>Delete Permanently</Button>
           </div>
         }
       >
-        <div className="space-y-3">
+        <div className="space-y-4">
           {actionError && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/8 p-3 text-sm text-red-400">
+            <div className="flex items-center gap-2 rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
               <AlertCircle className="h-4 w-4 shrink-0" /> {actionError}
             </div>
           )}
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-            <Trash2 className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-zinc-400">
-              Permanently delete <strong className="text-zinc-200">"{selectedTask?.title}"</strong>? This cannot be undone.
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+            <Trash2 className="h-5 w-5 text-danger shrink-0 mt-0.5" />
+            <p className="text-sm text-content-secondary">
+              Permanently delete <strong className="text-content">"{selectedTask?.title}"</strong>? This action cannot be undone.
             </p>
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   );
 };
 

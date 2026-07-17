@@ -1,63 +1,70 @@
 import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '../../utils/cn';
 
-type BadgeVariant = 'priority-low' | 'priority-medium' | 'priority-high' | 'priority-critical'
-  | 'status-todo' | 'status-inprogress' | 'status-done'
-  | 'default' | 'indigo' | 'emerald' | 'amber' | 'rose';
+const badgeVariants = cva(
+  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 whitespace-nowrap',
+  {
+    variants: {
+      variant: {
+        default: 'border-transparent bg-surface text-content shadow-sm',
+        secondary: 'border-transparent bg-surface-hover text-content-secondary',
+        outline: 'text-content-secondary border-border-subtle',
+        
+        // Priority
+        'priority-critical': 'border-danger/20 bg-danger/10 text-danger',
+        'priority-high': 'border-amber-500/20 bg-amber-500/10 text-amber-500',
+        'priority-medium': 'border-primary/20 bg-primary/10 text-primary',
+        'priority-low': 'border-border-subtle bg-surface text-content-muted',
+        
+        // Status
+        'status-todo': 'border-border-subtle bg-surface text-content-secondary',
+        'status-inprogress': 'border-primary/20 bg-primary/10 text-primary',
+        'status-done': 'border-emerald-500/20 bg-emerald-500/10 text-emerald-500',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
 
-interface BadgeProps {
-  variant?: BadgeVariant;
-  children: React.ReactNode;
-  className?: string;
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {
   dot?: boolean;
 }
 
-const styles: Record<BadgeVariant, string> = {
-  'priority-critical': 'bg-red-500/10 text-red-400 border-red-500/25',
-  'priority-high':     'bg-amber-500/10 text-amber-400 border-amber-500/25',
-  'priority-medium':   'bg-blue-500/10 text-blue-400 border-blue-500/25',
-  'priority-low':      'bg-zinc-800/70 text-zinc-400 border-zinc-700/80',
-  'status-todo':       'bg-indigo-500/10 text-indigo-400 border-indigo-500/25',
-  'status-inprogress': 'bg-amber-500/10 text-amber-400 border-amber-500/25',
-  'status-done':       'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  'default':           'bg-zinc-800/70 text-zinc-400 border-zinc-700/80',
-  'indigo':            'bg-indigo-500/10 text-indigo-400 border-indigo-500/25',
-  'emerald':           'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  'amber':             'bg-amber-500/10 text-amber-400 border-amber-500/25',
-  'rose':              'bg-rose-500/10 text-rose-400 border-rose-500/25',
+const dotColors: Record<string, string> = {
+  'priority-critical': 'bg-red-500',
+  'priority-high': 'bg-amber-500',
+  'priority-medium': 'bg-blue-500',
+  'priority-low': 'bg-content-muted',
+  'status-todo': 'bg-content-secondary',
+  'status-inprogress': 'bg-primary',
+  'status-done': 'bg-emerald-500',
+  'default': 'bg-content-secondary',
+  'secondary': 'bg-content-muted',
+  'outline': 'bg-content-muted',
 };
 
-const dotColors: Record<BadgeVariant, string> = {
-  'priority-critical': 'bg-red-400',
-  'priority-high':     'bg-amber-400',
-  'priority-medium':   'bg-blue-400',
-  'priority-low':      'bg-zinc-400',
-  'status-todo':       'bg-indigo-400',
-  'status-inprogress': 'bg-amber-400',
-  'status-done':       'bg-emerald-400',
-  'default':           'bg-zinc-400',
-  'indigo':            'bg-indigo-400',
-  'emerald':           'bg-emerald-400',
-  'amber':             'bg-amber-400',
-  'rose':              'bg-rose-400',
-};
+export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, dot, children, ...props }, ref) => {
+    return (
+      <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props}>
+        {dot && (
+          <span
+            className={cn("h-1.5 w-1.5 rounded-full shrink-0", variant ? dotColors[variant] : dotColors['default'])}
+          />
+        )}
+        {children}
+      </div>
+    );
+  }
+);
+Badge.displayName = 'Badge';
 
-export const Badge: React.FC<BadgeProps> = ({ variant = 'default', children, className = '', dot }) => {
-  return (
-    <span
-      className={[
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5',
-        'text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap',
-        styles[variant],
-        className,
-      ].join(' ')}
-    >
-      {dot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotColors[variant]}`} />}
-      {children}
-    </span>
-  );
-};
-
-export const getPriorityVariant = (p: string): BadgeVariant => {
+export const getPriorityVariant = (p: string) => {
   switch (p) {
     case 'Critical': return 'priority-critical';
     case 'High':     return 'priority-high';
@@ -66,7 +73,7 @@ export const getPriorityVariant = (p: string): BadgeVariant => {
   }
 };
 
-export const getStatusVariant = (s: string): BadgeVariant => {
+export const getStatusVariant = (s: string) => {
   if (s === 'Completed') return 'status-done';
   if (s === 'In Progress') return 'status-inprogress';
   return 'status-todo';
