@@ -96,3 +96,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+backend/data/
+backend/test*.ts
+backend/test*.js
