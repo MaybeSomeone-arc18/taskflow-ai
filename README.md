@@ -395,7 +395,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
   
   
   <br/><br/>
-  
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=MaybeSomeone-arc18&layout=compact&theme=radium" alt="Top Languages" width="50%" />
+ 
 
 </div>
