@@ -49,3 +49,8 @@ export const updateTask = async (id: string, taskData: Partial<Task>): Promise<T
 export const deleteTask = async (id: string): Promise<void> => {
   await api.delete(`/tasks/${id}`);
 };
+
+export const importAITasks = async (projectId: string, tasks: Partial<Task>[]): Promise<Task[]> => {
+  const response = await api.post('/tasks/import-ai', { projectId, tasks });
+  return response.data.data;
+};

@@ -115,6 +115,30 @@ export const KanbanBoard: React.FC = () => {
 
   useEffect(() => { fetchTasksList(); }, [fetchTasksList]);
 
+  useEffect(() => {
+    const handleReplace = async (data: { id: string, updates: any }) => {
+      try {
+        await updateTask(data.id, data.updates);
+        fetchTasksList();
+        eventBus.emit('refresh_dashboard');
+        eventBus.emit('refresh_analytics');
+      } catch (err) {
+        console.error('Failed to replace task:', err);
+      }
+    };
+    
+    const handleAITaskCreated = () => {
+      fetchTasksList();
+    };
+
+    eventBus.on('replace_task', handleReplace);
+    eventBus.on('refresh_dashboard', handleAITaskCreated);
+    return () => {
+      eventBus.off('replace_task', handleReplace);
+      eventBus.off('refresh_dashboard', handleAITaskCreated);
+    };
+  }, [fetchTasksList]);
+
   const handleCreateTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectId || !title.trim()) return;
@@ -409,10 +433,28 @@ export const KanbanBoard: React.FC = () => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
                       }}
-                      onDrop={(e) => {
+                      onDrop={async (e) => {
                         e.preventDefault();
                         const taskId = e.dataTransfer.getData('text/plain');
-                        if (taskId) {
+                        const aiTaskStr = e.dataTransfer.getData('ai-task');
+                        if (aiTaskStr) {
+                          try {
+                            const aiTask = JSON.parse(aiTaskStr);
+                            await createTask({
+                              title: aiTask.title,
+                              description: aiTask.description || '',
+                              status: col.name,
+                              priority: aiTask.priority || 'Medium',
+                              estimatedHours: aiTask.estimatedHours || 0,
+                              projectId: projectId as any
+                            });
+                            eventBus.emit('refresh_dashboard');
+                            // Trigger full refresh
+                            fetchTasksList();
+                          } catch (err) {
+                            console.error('Failed to import dragged AI task', err);
+                          }
+                        } else if (taskId) {
                           handleStatusQuickChange(taskId, col.name);
                         }
                       }}
@@ -484,7 +526,7 @@ export const KanbanBoard: React.FC = () => {
 
         {/* ─── AI Panel (1/4) ─── */}
         <div className="lg:col-span-1 h-full">
-          <AIPanel projectId={project._id} />
+          <AIPanel projectId={project._id} tasks={tasks} />
         </div>
       </div>
 

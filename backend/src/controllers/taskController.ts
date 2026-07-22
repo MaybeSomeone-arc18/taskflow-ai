@@ -227,3 +227,42 @@ export const getTasksByProject = asyncHandler(async (req: Request, res: Response
 
   sendSuccess(res, result, 'Project tasks fetched successfully');
 });
+
+// @desc    Bulk create AI generated tasks (Project owner only)
+// @route   POST /api/v1/tasks/import-ai
+// @access  Private
+export const importAITasks = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const { projectId, tasks } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new Error('User context missing');
+  }
+
+  if (!projectId || !tasks || !Array.isArray(tasks) || tasks.length === 0) {
+    return next(new AppError('Invalid payload: projectId and non-empty tasks array are required', 400));
+  }
+
+  // Authorization check
+  const isOwner = await checkProjectOwnership(projectId, userId.toString());
+  if (!isOwner) {
+    return next(new AppError('Permission denied, you do not own the parent project', 403));
+  }
+
+  // Format tasks for insertion
+  const tasksData = tasks.map((task: any) => ({
+    title: task.title,
+    description: task.description || '',
+    status: task.status || 'Todo',
+    priority: task.priority || 'Medium',
+    dueDate: task.dueDate || undefined,
+    estimatedHours: task.estimatedHours || 0,
+    actualHours: 0,
+    tags: task.tags || [],
+    projectId,
+    createdBy: userId,
+  }));
+
+  const createdTasks = await taskService.createTasksBulk(tasksData);
+  sendSuccess(res, createdTasks, `${createdTasks.length} AI tasks imported successfully`, 201);
+});

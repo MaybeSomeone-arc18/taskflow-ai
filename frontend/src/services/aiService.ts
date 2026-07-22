@@ -1,7 +1,14 @@
 import api from './api';
 
 export interface TaskBreakdownResponse {
-  subtasks: { title: string; estimatedHours: number }[];
+  subtasks: { 
+    title: string; 
+    estimatedHours: number;
+    priority?: 'Low' | 'Medium' | 'High' | 'Critical';
+    description?: string;
+    tags?: string[];
+    acceptanceCriteria?: string[];
+  }[];
   estimatedOrder: string[];
   estimatedEffort: string;
 }
