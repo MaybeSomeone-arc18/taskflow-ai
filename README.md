@@ -39,7 +39,6 @@
 - [Overview](#-overview)
 - [Why TaskFlow AI?](#-why-taskflow-ai)
 - [Features](#-features)
-- [Screenshots](#-screenshots)
 - [System Design & Architecture](#-system-design--architecture)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -91,29 +90,6 @@ While platforms like Trello, Notion, and ClickUp are powerful, TaskFlow AI diffe
 | **Workspace** | Create, manage, and archive complex projects | ✅ | Multi-project organization |
 | **Notifications** | Real-time in-app notification center | 🚧 | *Coming Soon* |
 | **Search** | Global command-palette style search | 🚧 | *Coming Soon (Ctrl+K)* |
-
----
-
-## 📸 Screenshots
-
-> Note: Place the following images in the `/docs/images/` directory.
-
-<div align="center">
-  <img src="docs/demo.gif" alt="Dashboard Demo" width="800" />
-  <p><em>🎥 TaskFlow AI Dashboard Demo</em></p>
-</div>
-
-| Dashboard | Kanban Board |
-|:---:|:---:|
-| <img src="docs/images/dashboard.png" alt="Dashboard" width="400" /> | <img src="docs/images/kanban.png" alt="Kanban" width="400" /> |
-
-| AI Planner | Analytics |
-|:---:|:---:|
-| <img src="docs/images/ai-planner.png" alt="AI Planner" width="400" /> | <img src="docs/images/analytics.png" alt="Analytics" width="400" /> |
-
-| Settings (Dark) | Settings (Light) |
-|:---:|:---:|
-| <img src="docs/images/settings-dark.png" alt="Settings Dark" width="400" /> | <img src="docs/images/settings-light.png" alt="Settings Light" width="400" /> |
 
 ---
 
