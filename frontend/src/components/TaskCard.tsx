@@ -30,6 +30,15 @@ export const TaskCard: React.FC<TaskCardProps> = React.memo(({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
+      draggable={true}
+      onDragStartCapture={(e: any) => {
+        e.dataTransfer.setData('text/plain', task._id);
+        e.dataTransfer.effectAllowed = 'move';
+        (e.target as HTMLElement).style.opacity = '0.5';
+      }}
+      onDragEndCapture={(e: any) => {
+        (e.target as HTMLElement).style.opacity = '1';
+      }}
       className="group relative rounded-xl border border-border-subtle bg-surface p-4 hover:border-border-focus hover:bg-surface-hover transition-all duration-300 hover:shadow-xl hover:shadow-black/20 cursor-grab active:cursor-grabbing flex flex-col gap-3"
     >
       {/* Priority accent line */}

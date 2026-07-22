@@ -492,16 +492,18 @@ function AppearanceTab({ showToast: _showToast }: { showToast: (m: string, t: 's
   const [prefs, setPrefs] = useState<AppearancePrefs>(loadPrefs);
 
   const update = useCallback(<K extends keyof AppearancePrefs>(key: K, val: AppearancePrefs[K]) => {
+    // Apply side-effects outside of the setState callback
+    if (key === 'accentColor') applyAccentColor(val as AccentColor);
+    if (key === 'fontSize') applyFontSize(val as FontSize);
+    if (key === 'themeMode') {
+      const wantDark = val === 'dark' || (val === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const isDark = theme === 'dark';
+      if (wantDark !== isDark) toggleTheme();
+    }
+
     setPrefs(p => {
       const next = { ...p, [key]: val };
       savePrefs(next);
-      if (key === 'accentColor') applyAccentColor(val as AccentColor);
-      if (key === 'fontSize') applyFontSize(val as FontSize);
-      if (key === 'themeMode') {
-        const wantDark = val === 'dark' || (val === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        const isDark = theme === 'dark';
-        if (wantDark !== isDark) toggleTheme();
-      }
       return next;
     });
   }, [theme, toggleTheme]);

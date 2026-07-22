@@ -402,7 +402,21 @@ export const KanbanBoard: React.FC = () => {
                 {STATUS_COLUMNS.map((col) => {
                   const colTasks = tasks.filter((t) => t.status === col.name);
                   return (
-                    <div key={col.name} className={cn("flex flex-col rounded-2xl border h-full max-h-[800px]", col.borderColor, col.bgColor)}>
+                    <div 
+                      key={col.name} 
+                      className={cn("flex flex-col rounded-2xl border h-full max-h-[800px] transition-colors duration-200", col.borderColor, col.bgColor)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const taskId = e.dataTransfer.getData('text/plain');
+                        if (taskId) {
+                          handleStatusQuickChange(taskId, col.name);
+                        }
+                      }}
+                    >
                       {/* Column header */}
                       <div className="flex items-center justify-between p-4 pb-3 border-b border-border-subtle shrink-0 sticky top-0 bg-inherit z-10 rounded-t-2xl">
                         <div className="flex items-center gap-2.5">
