@@ -193,7 +193,7 @@ export const AIPlanner: React.FC = () => {
 
           {/* AI Panel */}
           <div className="md:col-span-2 h-[calc(100vh-140px)] min-h-[600px]">
-            {selectedProjectId && <AIPanel projectId={selectedProjectId} />}
+            {selectedProjectId && <AIPanel projectId={selectedProjectId} tasks={[]} />}
           </div>
         </div>
       )}

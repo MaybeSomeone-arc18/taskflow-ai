@@ -78,5 +78,5 @@ export const deleteTask = async (id: string): Promise<ITask | null> => {
 
 export const createTasksBulk = async (tasksData: Partial<ITask>[]): Promise<ITask[]> => {
   const tasks = await Task.insertMany(tasksData);
-  return tasks;
+  return tasks as unknown as ITask[];
 };
