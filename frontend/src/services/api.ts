@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// Ensure the base URL always points to the v1 API, even if the env var only has the domain
+if (API_BASE_URL && !API_BASE_URL.replace(/\/$/, '').endsWith('/api/v1')) {
+  API_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/v1`;
+}
+API_BASE_URL = API_BASE_URL.replace(/\/$/, ''); // Remove any trailing slash to ensure clean concatenation
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
