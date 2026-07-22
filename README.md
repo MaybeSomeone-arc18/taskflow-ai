@@ -393,8 +393,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
   
   <br/><br/>
   
-  <img src="https://github-readme-stats.vercel.app/api?username=MaybeSomeone-arc18&show_icons=true&theme=radium" alt="GitHub Stats" width="48%" />
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=MaybeSomeone-arc18&theme=radium" alt="GitHub Streak" width="48%" />
   
   <br/><br/>
   
