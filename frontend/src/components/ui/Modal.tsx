@@ -47,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", duration: 0.3, bounce: 0 }}
             className={cn(
-              "relative w-full rounded-[24px] border border-border-subtle bg-panel shadow-2xl flex flex-col max-h-[90vh] overflow-hidden",
+              "relative w-full rounded-[24px] border shadow-2xl flex flex-col max-h-[90vh] overflow-hidden glass-surface-panel",
               maxWidths[maxWidth]
             )}
             onClick={(e) => e.stopPropagation()}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, AppearancePrefs } from '../context/ThemeContext';
 import api from '../services/api';
 import {
   User, Shield, Keyboard, Monitor, HelpCircle,
@@ -23,16 +23,6 @@ type ThemeMode = 'light' | 'dark' | 'system';
 type AccentColor = 'blue' | 'purple' | 'emerald' | 'orange' | 'rose';
 type FontSize = 'small' | 'medium' | 'large';
 type Density = 'comfortable' | 'compact';
-
-interface AppearancePrefs {
-  themeMode: ThemeMode;
-  accentColor: AccentColor;
-  fontSize: FontSize;
-  density: Density;
-  reducedMotion: boolean;
-  glassEffect: boolean;
-  backgroundEffects: boolean;
-}
 
 const ACCENT_COLORS: { id: AccentColor; label: string; hex: string; cls: string }[] = [
   { id: 'blue',    label: 'Blue',    hex: '#3b82f6', cls: 'bg-blue-500' },
@@ -76,35 +66,6 @@ const TABS: { id: TabId; icon: React.ElementType; label: string }[] = [
   { id: 'help',       icon: HelpCircle, label: 'Help & Docs' },
 ];
 
-function loadPrefs(): AppearancePrefs {
-  try {
-    const s = localStorage.getItem('taskflow_appearance');
-    if (s) return JSON.parse(s) as AppearancePrefs;
-  } catch (_) { /* noop */ }
-  return { themeMode: 'dark', accentColor: 'blue', fontSize: 'medium', density: 'comfortable', reducedMotion: false, glassEffect: true, backgroundEffects: true };
-}
-
-function savePrefs(p: AppearancePrefs) {
-  localStorage.setItem('taskflow_appearance', JSON.stringify(p));
-}
-
-function applyAccentColor(color: AccentColor) {
-  const map: Record<AccentColor, { primary: string; hover: string }> = {
-    blue:    { primary: '#3b82f6', hover: '#2563eb' },
-    purple:  { primary: '#8b5cf6', hover: '#7c3aed' },
-    emerald: { primary: '#10b981', hover: '#059669' },
-    orange:  { primary: '#f97316', hover: '#ea580c' },
-    rose:    { primary: '#f43f5e', hover: '#e11d48' },
-  };
-  const { primary, hover } = map[color];
-  document.documentElement.style.setProperty('--theme-primary', primary);
-  document.documentElement.style.setProperty('--theme-primary-hover', hover);
-}
-
-function applyFontSize(size: FontSize) {
-  const map: Record<FontSize, string> = { small: '13px', medium: '14px', large: '15px' };
-  document.documentElement.style.fontSize = map[size];
-}
 
 function getPasswordStrength(p: string): { score: number; label: string; color: string } {
   let s = 0;
@@ -488,31 +449,12 @@ function SecurityTab({ showToast }: { showToast: (m: string, t: 'success' | 'err
 // ── Appearance Tab ─────────────────────────────────────────────────────────────
 
 function AppearanceTab({ showToast: _showToast }: { showToast: (m: string, t: 'success' | 'error') => void }) {
-  const { theme, toggleTheme } = useTheme();
-  const [prefs, setPrefs] = useState<AppearancePrefs>(loadPrefs);
+  const { prefs, updatePreferences } = useTheme();
 
+  // updatePreferences goes straight to ThemeContext which applies all DOM changes
   const update = useCallback(<K extends keyof AppearancePrefs>(key: K, val: AppearancePrefs[K]) => {
-    // Apply side-effects outside of the setState callback
-    if (key === 'accentColor') applyAccentColor(val as AccentColor);
-    if (key === 'fontSize') applyFontSize(val as FontSize);
-    if (key === 'themeMode') {
-      const wantDark = val === 'dark' || (val === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      const isDark = theme === 'dark';
-      if (wantDark !== isDark) toggleTheme();
-    }
-
-    setPrefs(p => {
-      const next = { ...p, [key]: val };
-      savePrefs(next);
-      return next;
-    });
-  }, [theme, toggleTheme]);
-
-  useEffect(() => {
-    applyAccentColor(prefs.accentColor);
-    applyFontSize(prefs.fontSize);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    updatePreferences({ [key]: val });
+  }, [updatePreferences]);
 
   const themeModes: { id: ThemeMode; icon: React.ElementType; label: string }[] = [
     { id: 'system', icon: Laptop, label: 'System' },

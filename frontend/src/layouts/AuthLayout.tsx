@@ -84,15 +84,15 @@ export const AuthLayout: React.FC = () => {
       {/* ===== LEFT MARKETING PANEL ===== */}
       <div className="relative hidden lg:flex flex-col justify-between w-[50%] max-w-[700px] shrink-0 overflow-hidden border-r border-border-subtle bg-background/50">
         {/* Background layers */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
+        <div className="decorative-bg absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-background to-background transition-opacity duration-300" />
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="decorative-bg absolute inset-0 opacity-[0.03] transition-opacity duration-300"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,1) 1px, transparent 0)`,
             backgroundSize: '24px 24px',
           }}
         />
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+        <div className="decorative-bg absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] pointer-events-none transition-opacity duration-300" />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full p-12 xl:p-16">

@@ -274,7 +274,7 @@ export const DashboardLayout: React.FC = () => {
         className="hidden lg:flex shrink-0 h-full py-6 pl-6"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <div className="w-full h-full rounded-[24px] border border-border-subtle bg-panel backdrop-blur-2xl overflow-hidden flex flex-col shadow-2xl">
+        <div className="w-full h-full rounded-[24px] border overflow-hidden flex flex-col shadow-2xl glass-surface-panel">
           {renderSidebarContent()}
         </div>
       </motion.aside>
@@ -339,7 +339,7 @@ export const DashboardLayout: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="h-full w-full max-w-[1600px] mx-auto rounded-[24px] border border-border-subtle bg-surface/60 overflow-hidden shadow-2xl relative backdrop-blur-md"
+            className="h-full w-full max-w-[1600px] mx-auto rounded-[24px] border overflow-hidden shadow-2xl relative glass-surface-panel"
           >
             <div className="relative z-10 h-full overflow-y-auto custom-scrollbar p-8">
               <Outlet />

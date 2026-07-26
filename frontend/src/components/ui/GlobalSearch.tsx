@@ -186,7 +186,7 @@ export const GlobalSearch: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: -8 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="relative w-[90%] max-w-[760px] bg-panel border border-border-subtle shadow-2xl rounded-[20px] overflow-hidden flex flex-col max-h-[70vh]"
+                className="relative w-[90%] max-w-[760px] border shadow-2xl rounded-[20px] overflow-hidden flex flex-col max-h-[70vh] glass-surface-panel"
                 ref={searchRef}
               >
                 {/* Input Header */}

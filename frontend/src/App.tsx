@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { useTheme } from './context/ThemeContext';
+import { MotionConfig } from 'framer-motion';
 import Loading from './components/Loading';
 
 // Layouts
@@ -26,8 +28,20 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <NotificationProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
+          <AppContent />
+        </AuthProvider>
+      </NotificationProvider>
+    </ThemeProvider>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { prefs } = useTheme();
+  
+  return (
+    <MotionConfig reducedMotion={prefs.reducedMotion ? "always" : "user"}>
+      <BrowserRouter>
+        <Routes>
             {/* Guest Authentication Screen Routes */}
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
@@ -79,11 +93,9 @@ export const App: React.FC = () => {
               
               <Route path="*" element={<NotFound />} />
             </Route>
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </NotificationProvider>
-    </ThemeProvider>
+        </Routes>
+      </BrowserRouter>
+    </MotionConfig>
   );
 };
 

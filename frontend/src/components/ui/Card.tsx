@@ -6,13 +6,12 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, glass, ...props }, ref) => {
+  ({ className, glass: _glass, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "rounded-[20px] border border-border-subtle bg-card backdrop-blur-[18px] shadow-sm",
-          glass && "bg-card/40",
+          "rounded-[20px] border shadow-sm glass-surface-card",
           className
         )}
         {...props}
