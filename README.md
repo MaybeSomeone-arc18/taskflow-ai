@@ -26,7 +26,6 @@
     <img src="https://img.shields.io/github/repo-size/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Repo Size" />
   </p>
 
-  <h3>✨ Live Demo: <a href="#">Coming Soon</a></h3>
 </div>
 
 ---
