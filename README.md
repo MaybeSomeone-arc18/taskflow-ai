@@ -78,18 +78,31 @@ While platforms like Trello, Notion, and ClickUp are powerful, TaskFlow AI diffe
 
 ## ✨ Features
 
-| Feature | Description | Status | Examples |
-|:---|:---|:---:|:---|
-| **Authentication** | Secure JWT-based login & registration with bcrypt | ✅ | `POST /api/v1/auth/login` |
-| **AI Planner** | Gemini-powered task breakdown and prioritization | ✅ | Generates sub-tasks from prompts |
-| **Analytics** | Beautiful, interactive charts tracking productivity | ✅ | Weekly task completion charts |
-| **Kanban Board** | Intuitive drag & drop interface for workflow management | ✅ | Move tasks from Todo to Done |
-| **Responsive UI** | Flawless experience across desktop, tablet, and mobile | ✅ | Collapsible sidebar, flex grids |
-| **Dark Mode** | Persistent system/light/dark themes with glassmorphism | ✅ | Controlled via settings tab |
-| **Theme Customization** | Customizable accent colors, font sizes, and layout density | ✅ | Saved to `localStorage` |
-| **Workspace** | Create, manage, and archive complex projects | ✅ | Multi-project organization |
-| **Notifications** | Real-time in-app notification center | 🚧 | *Coming Soon* |
-| **Search** | Global command-palette style search | 🚧 | *Coming Soon (Ctrl+K)* |
+### 🔐 Authentication
+- **Google OAuth (Google Identity Services):** Seamless one-tap login.
+- **Continue as Guest:** Instant access without account creation.
+- **Email/Password Authentication:** Traditional signup with secure password hashing.
+- **JWT Authentication:** Stateless and secure session management.
+- **Protected Routes:** React Router guarding private application views.
+- **Google Account Linking:** Automatically links Google logins to existing accounts.
+
+### 🧠 AI Integration
+- **AI Task Breakdown:** Gemini AI intelligently splits large projects into manageable tasks.
+- **AI Insights:** Daily planning and productivity suggestions.
+- **Estimated Effort:** Automatically estimates task complexity.
+- **Gemini-powered Project Planning:** Native integration with Google's latest models.
+
+### 📋 Task Management
+- **Drag & Drop Kanban:** Move tasks seamlessly across columns.
+- **Bulk Task Creation:** Add multiple tasks efficiently.
+- **Project CRUD:** Create, read, update, and delete projects.
+- **Task CRUD:** Full lifecycle management for individual tasks.
+- **Smart Status Management:** Automatically updates workflows.
+
+### ⚙️ Settings
+- **Theme Persistence:** Stores user preferences in `localStorage`.
+- **Accent Color Customization:** Personalize the UI look and feel.
+- **Layout Preferences:** Adjust the workspace density to your liking.
 
 ---
 
@@ -202,15 +215,23 @@ npm install
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the `backend/` directory and populate it with the following:
+Create a `.env` file for the backend and a `.env` file for the frontend.
 
+### Frontend (`frontend/.env`)
+| Variable | Description | Example |
+|:---|:---|:---|
+| `VITE_API_URL` | The URL of your backend API | `http://localhost:5000/api/v1` |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID | `your-google-client-id.apps.googleusercontent.com` |
+
+### Backend (`backend/.env`)
 | Variable | Description | Example |
 |:---|:---|:---|
 | `PORT` | The port for the Express server | `5000` |
 | `MONGO_URI` | Your MongoDB connection string | `mongodb://localhost:27017/taskflow` |
 | `JWT_SECRET` | Secret key for signing JSON Web Tokens | `your_super_secret_key_123` |
-| `GEMINI_API_KEY` | Google Gemini API Key for AI features | `AIzaSy...` |
 | `CLIENT_URL` | The URL of your frontend application | `http://localhost:5173` |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID for token verification | `your-google-client-id...` |
+| `GEMINI_API_KEY` | Google Gemini API Key for AI features | `AIzaSy...` |
 
 ---
 
@@ -259,6 +280,8 @@ npm run build
 |:---|:---|:---|:---:|
 | **POST** | `/api/v1/auth/register` | Register a new user | ❌ |
 | **POST** | `/api/v1/auth/login` | Authenticate user & get JWT | ❌ |
+| **POST** | `/api/v1/auth/google` | Authenticate using Google OAuth ID token | ❌ |
+| **POST** | `/api/v1/auth/guest` | Create a temporary guest session | ❌ |
 | **GET**  | `/api/v1/auth/me` | Get current logged-in user profile | ✅ |
 | **PUT**  | `/api/v1/auth/password` | Change account password | ✅ |
 | **GET**  | `/api/v1/projects` | Get all workspace projects | ✅ |
@@ -276,24 +299,27 @@ npm run build
 
 ## 🛡️ Authentication
 
-TaskFlow AI uses a secure stateless authentication flow using JSON Web Tokens (JWT).
+TaskFlow AI features a multi-tiered authentication system ensuring a smooth user experience while maintaining robust security. 
+
+Users can log in via **Traditional Login (Email/Password)**, **Google OAuth**, or **Guest Mode**. Google users are securely verified on the backend using the `google-auth-library` before a session is granted. All flows converge to issue a signed JSON Web Token (JWT), which is used to guard Protected Routes.
 
 ```text
 [ User ] 
    │
-   ├─ (1) Submits Email/Password
+   ├─ (A) Traditional Login -> bcrypt.compare()
+   ├─ (B) Google OAuth -> Verify ID Token via google-auth-library
+   ├─ (C) Guest Mode -> Generate temporary user profile
    ▼
 [ Express API ]
    │
-   ├─ (2) `bcrypt.compare()` validates hash
-   ├─ (3) Generates signed JWT
+   ├─ Generates signed JWT (includes user ID and Email)
    ▼
 [ Frontend ]
    │
-   ├─ (4) Stores JWT in LocalStorage
-   ├─ (5) Attaches `Authorization: Bearer <token>` to Axios Interceptor
+   ├─ Stores JWT in LocalStorage
+   ├─ Attaches `Authorization: Bearer <token>` to Axios Interceptor
    ▼
-[ Protected API Routes ] ── (6) Validates JWT signature ──► [ Access Granted ]
+[ Protected API Routes ] ── Validates JWT signature ──► [ Access Granted ]
 ```
 
 ---
@@ -302,11 +328,13 @@ TaskFlow AI uses a secure stateless authentication flow using JSON Web Tokens (J
 
 TaskFlow AI seamlessly integrates **Google Gemini** to elevate your workflow from passive tracking to active management.
 
-- **Task Prioritization:** The AI analyzes upcoming deadlines and workload to suggest which tasks you should tackle first.
-- **Smart Breakdown (AI Planner):** Input a vague project idea (e.g., "Build a landing page"), and the AI will generate a structured checklist of specific sub-tasks.
-- **Project Health:** (Coming Soon) AI evaluation of project velocity to detect if a project is at risk of missing its deadline.
-- **Productivity Analysis:** The AI engine will provide weekly summaries of your work habits and suggestions for improvement.
-- **Risk Detection:** Alerts when estimated hours exceed available time or deadlines are clustering too tightly.
+**AI Implementation Workflow:**
+1. **User Prompt:** The user inputs a project idea or task description into the AI Planner.
+2. **Backend:** The Express server receives the prompt and constructs an engineered context.
+3. **Gemini:** The `@google/genai` model processes the request.
+4. **JSON Parsing:** The backend extracts and validates the structured JSON response from Gemini.
+5. **Task Suggestions:** The parsed array of sub-tasks, complete with estimated effort and priority, is generated.
+6. **Displayed in AI Panel:** The frontend renders the suggestions, allowing the user to seamlessly add them to their Kanban board.
 
 ---
 
@@ -319,16 +347,89 @@ TaskFlow AI seamlessly integrates **Google Gemini** to elevate your workflow fro
 
 ---
 
+## 🔒 Security
+
+- **JWT Authentication:** Stateless, signed tokens securely manage sessions.
+- **Password Hashing:** `bcrypt` prevents raw passwords from being stored in the database.
+- **Google OAuth Verification:** Backend explicitly verifies Google ID tokens rather than trusting the client.
+- **Protected Routes:** Frontend routing and backend middleware enforce authorization checks.
+- **CORS:** Cross-Origin Resource Sharing is strictly configured to only accept requests from the frontend client.
+- **Rate Limiting:** `express-rate-limit` mitigates brute-force attacks on auth endpoints.
+- **Environment Variables:** Sensitive keys are kept completely out of the source code.
+- **Input Validation:** Zod (Frontend) and Joi/Mongoose (Backend) ensure all inputs are sanitized.
+
+---
+
+## 📸 Screenshots
+
+*UI previews of TaskFlow AI.*
+
+### Dashboard
+![Dashboard](docs/images/dashboard.png)
+
+### Kanban Board
+![Kanban](docs/images/kanban.png)
+
+### Analytics
+![Analytics](docs/images/analytics.png)
+
+### AI Planner
+![AI Planner](docs/images/ai-planner.png)
+
+### Login
+![Login](docs/images/login.png)
+
+### Register
+![Register](docs/images/register.png)
+
+### Settings
+![Settings](docs/images/settings.png)
+
+---
+
+## 🚀 Deployment
+
+The platform is designed to be easily deployed to modern cloud providers:
+
+- **Frontend:** Vercel (Recommended for Vite/React applications)
+- **Backend:** Render or Heroku (Node.js/Express)
+- **Database:** MongoDB Atlas (Cloud database)
+
+*Ensure all environment variables from `.env` are configured in your deployment platform's dashboard.*
+
+---
+
 ## 📈 Future Vision & Roadmap
 
 - [ ] **Real-time Collaboration:** WebSockets for live Kanban board updates across teams.
 - [ ] **Team Workspaces:** Role-based access control (Admin, Member, Viewer).
-- [ ] **Comments & File Uploads:** Attach assets and discuss tasks inline.
-- [ ] **AI Chat Assistant:** A sidebar AI agent to query project status ("What's blocking the Q3 release?").
-- [ ] **Voice Commands:** Dictate tasks directly into the app.
+- [ ] **AI Chat Assistant:** A sidebar AI agent to query project status.
 - [ ] **Google Calendar Sync:** Two-way synchronization for deadlines.
 - [ ] **Slack Integration:** Push notifications for task updates.
-- [ ] **Email Notifications:** Daily digests and overdue alerts.
+
+---
+
+## ⚠️ Known Limitations
+
+- **Guest Accounts:** Guest sessions are permanent in the database until manually cleaned up. Future updates will introduce an automated cron job to purge inactive guest accounts.
+- **Offline Support:** The application currently requires an active internet connection to interact with the database and AI features.
+
+---
+
+## 🧗 Challenges Faced
+
+- **Authentication Architecture:** Designing a seamless system that elegantly handles traditional logins, Google OAuth linking, and temporary Guest sessions without compromising the data model.
+- **Gemini Model Compatibility:** Parsing unstructured text responses from the AI into strictly typed JSON objects required careful prompt engineering and fallback validation.
+- **Environment Variable Management:** Managing separate environments for frontend builds (Vite) and backend servers required a disciplined approach to avoid leaking secrets.
+
+---
+
+## 🌟 Project Highlights
+
+- **Modern SaaS UI:** A beautiful, responsive interface designed to feel like a premium SaaS product (e.g., Linear, Vercel).
+- **Google OAuth & JWT:** A robust, hybrid authentication architecture built for scale.
+- **AI-First Project Management:** Moving beyond manual task entry by integrating Google Gemini for automated planning.
+- **Drag & Drop Kanban:** A fluid, native-feeling task management experience built on modern React principles.
 
 ---
 

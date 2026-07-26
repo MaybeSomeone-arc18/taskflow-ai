@@ -9,6 +9,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   registerUser: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -66,6 +68,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
   };
 
+  const loginWithGoogle = async (credential: string) => {
+    const response = await api.post('/auth/google', { credential });
+    const { token: newToken, user: newUser } = response.data.data;
+
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+  };
+
+  const loginAsGuest = async () => {
+    const response = await api.post('/auth/guest');
+    const { token: newToken, user: newUser } = response.data.data;
+
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -82,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!token;
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, registerUser, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, loginWithGoogle, loginAsGuest, registerUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

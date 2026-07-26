@@ -3,7 +3,10 @@ import bcrypt from 'bcrypt';
 
 export interface IUser extends Document {
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string;
+  provider: string;
+  isGuest: boolean;
   fullName: string;
   avatarUrl: string;
   role: 'Admin' | 'User';
@@ -24,7 +27,20 @@ const userSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password hash is required'],
+      required: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    provider: {
+      type: String,
+      default: 'local',
+    },
+    isGuest: {
+      type: Boolean,
+      default: false,
     },
     fullName: {
       type: String,
@@ -48,6 +64,7 @@ const userSchema = new Schema<IUser>(
 
 // Method to verify password match
 userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+  if (!this.passwordHash) return false;
   return bcrypt.compare(password, this.passwordHash);
 };
 
