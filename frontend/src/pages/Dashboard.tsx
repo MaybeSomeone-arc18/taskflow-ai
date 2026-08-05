@@ -29,6 +29,8 @@ import {
   Folder,
   ArrowRight,
   Loader2,
+  Users,
+  Home,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -371,11 +373,22 @@ export const Dashboard: React.FC = () => {
                           <Folder className="h-5 w-5" style={{ color: proj.color }} />
                         </div>
                         <div>
-                          <h3 className="text-base font-semibold text-content group-hover:text-content-secondary truncate">
+                          <h3 className="text-base font-semibold text-content group-hover:text-content-secondary truncate flex items-center gap-2">
                             {proj.title}
+                            {proj.members && proj.members.length > 0 ? (
+                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 font-bold tracking-wider uppercase"><Users className="h-3 w-3" /> Shared</span>
+                            ) : (
+                              <span className="text-[10px] bg-surface-hover text-content-muted border border-border-subtle px-1.5 py-0.5 rounded flex items-center gap-1 font-bold tracking-wider uppercase"><Home className="h-3 w-3" /> Personal</span>
+                            )}
                           </h3>
-                          <span className="text-[11px] text-content-muted">
-                            Updated {new Date(proj.updatedAt || proj.createdAt).toLocaleDateString()}
+                          <span className="text-[11px] text-content-muted flex items-center gap-2 mt-1">
+                            <span>Updated {new Date(proj.updatedAt || proj.createdAt).toLocaleDateString()}</span>
+                            {proj.members && proj.members.length > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {proj.members.length} {proj.members.length === 1 ? 'member' : 'members'}</span>
+                              </>
+                            )}
                           </span>
                         </div>
                       </div>

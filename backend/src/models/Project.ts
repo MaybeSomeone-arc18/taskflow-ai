@@ -1,11 +1,22 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
+export interface IProjectMember {
+  userId: Types.ObjectId;
+  joinedAt: Date;
+}
+
 export interface IProject extends Document {
   title: string;
   description: string;
   color: string;
   status: 'Active' | 'Archived';
   createdBy: Types.ObjectId;
+  members: IProjectMember[];
+  invite?: {
+    token: string;
+    createdAt: Date;
+    expiresAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +54,20 @@ const projectSchema = new Schema<IProject>(
       ref: 'User',
       required: true,
       index: true,
+    },
+    members: {
+      type: [
+        {
+          userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+          joinedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+    invite: {
+      token: { type: String, index: true },
+      createdAt: { type: Date },
+      expiresAt: { type: Date },
     },
   },
   {

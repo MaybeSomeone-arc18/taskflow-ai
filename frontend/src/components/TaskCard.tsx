@@ -2,6 +2,7 @@ import React from 'react';
 import { Task } from '../types';
 import { Calendar, Clock, Edit2, Trash2, Hash } from 'lucide-react';
 import { Badge, getPriorityVariant } from './ui/Badge';
+import { Avatar } from './ui/Avatar';
 import { motion } from 'framer-motion';
 
 interface TaskCardProps {
@@ -128,18 +129,30 @@ export const TaskCard: React.FC<TaskCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Status selector */}
+      {/* Footer: Status selector and Avatar */}
       <div className="mt-2 pl-2 pt-3 border-t border-border-subtle flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Status</span>
-        <select
-          value={task.status}
-          onChange={(e) => { e.stopPropagation(); onStatusChange(task._id, e.target.value as Task['status']); }}
-          className="bg-surface hover:bg-surface-hover border border-border-subtle rounded-lg px-2 py-1 text-xs font-medium text-content focus:outline-none focus:border-primary cursor-pointer transition-colors"
-        >
-          <option value="Todo">Todo</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Status</span>
+          <select
+            value={task.status}
+            onChange={(e) => { e.stopPropagation(); onStatusChange(task._id, e.target.value as Task['status']); }}
+            className="bg-surface hover:bg-surface-hover border border-border-subtle rounded-lg px-2 py-1 text-xs font-medium text-content focus:outline-none focus:border-primary cursor-pointer transition-colors"
+          >
+            <option value="Todo">Todo</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        
+        {task.assignedTo && typeof task.assignedTo === 'object' && (
+          <div className="shrink-0 flex items-center justify-center" title={`Assigned to ${task.assignedTo.fullName || task.assignedTo.email}`}>
+            <Avatar 
+              src={task.assignedTo.avatarUrl} 
+              fallback={task.assignedTo.fullName?.charAt(0) || task.assignedTo.email?.charAt(0) || '?'}
+              className="h-6 w-6 ring-2 ring-surface cursor-help"
+            />
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -27,6 +27,9 @@ export const Login: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   const {
     register,
     handleSubmit,
@@ -52,7 +55,7 @@ export const Login: React.FC = () => {
       if (credentialResponse.credential) {
         await loginWithGoogle(credentialResponse.credential);
         setSuccessMsg('Google login successful. Redirecting...');
-        setTimeout(() => navigate('/'), 900);
+        setTimeout(() => navigate(redirectUrl), 900);
       }
     } catch (err) {
       setErrorMsg((err as Error).message);
@@ -67,7 +70,7 @@ export const Login: React.FC = () => {
     try {
       await loginAsGuest();
       setSuccessMsg('Guest session created. Redirecting...');
-      setTimeout(() => navigate('/'), 900);
+      setTimeout(() => navigate(redirectUrl), 900);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setIsSubmitting(false);
@@ -81,7 +84,7 @@ export const Login: React.FC = () => {
     try {
       await login(data.email, data.password);
       setSuccessMsg('Access granted. Redirecting...');
-      setTimeout(() => navigate('/'), 900);
+      setTimeout(() => navigate(redirectUrl), 900);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setIsSubmitting(false);
@@ -219,7 +222,7 @@ export const Login: React.FC = () => {
       <CardFooter className="flex-col border-t border-border-subtle mt-2 pt-6 pb-6">
         <p className="text-center text-sm text-content-secondary">
           Don&apos;t have an account?{' '}
-          <Link to="/signup" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+          <Link to={`/signup${location.search}`} className="font-semibold text-primary hover:text-primary-hover transition-colors">
             Create Account
           </Link>
         </p>

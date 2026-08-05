@@ -11,13 +11,26 @@ export const createProject = async (projectData: {
     description: projectData.description || '',
     color: projectData.color,
     createdBy: projectData.createdBy,
+    members: [{ userId: projectData.createdBy, joinedAt: new Date() }],
     status: 'Active',
   });
   return project;
 };
 
 export const getProjectsByUser = async (userId: string): Promise<IProject[]> => {
-  return Project.find({ createdBy: userId }).sort({ createdAt: -1 });
+  const projects = await Project.find({
+    $or: [
+      { createdBy: userId },
+      { 'members.userId': userId }
+    ]
+  }).sort({ createdAt: -1 });
+
+  return projects.map((project) => {
+    if (!project.members || project.members.length === 0) {
+      project.members = [{ userId: project.createdBy, joinedAt: project.createdAt || new Date() }];
+    }
+    return project;
+  });
 };
 
 export const getProjectById = async (projectId: string): Promise<IProject | null> => {

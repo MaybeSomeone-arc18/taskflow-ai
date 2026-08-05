@@ -22,6 +22,7 @@ const KanbanBoard = lazy(() => import('./pages/KanbanBoard'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AIPlanner = lazy(() => import('./pages/AIPlanner'));
 const Settings = lazy(() => import('./pages/Settings'));
+const InvitePage = lazy(() => import('./pages/InvitePage'));
 
 export const App: React.FC = () => {
   return (
@@ -47,6 +48,16 @@ const AppContent: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Register />} />
             </Route>
+
+            {/* Invite Route (Handles auth internally) */}
+            <Route 
+              path="/invite/:token" 
+              element={
+                <Suspense fallback={<Loading />}>
+                  <InvitePage />
+                </Suspense>
+              } 
+            />
 
             {/* Application Inside Routes Guarded by JWT protect gates */}
             <Route

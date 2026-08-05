@@ -12,6 +12,8 @@ export interface Project {
   color: string;
   status: 'Active' | 'Archived';
   createdBy: string;
+  members?: { userId: string | User; joinedAt: string }[];
+  invite?: { token: string; createdAt: string; expiresAt: string };
   createdAt: string;
   updatedAt: string;
 }

@@ -3,6 +3,7 @@ import { Schema, model, Document, Types } from 'mongoose';
 export interface IActivityLog extends Document {
   userId: Types.ObjectId;
   projectId: Types.ObjectId;
+  taskId?: Types.ObjectId;
   action: string;
   details: string;
   createdAt: Date;
@@ -21,6 +22,11 @@ const activityLogSchema = new Schema<IActivityLog>(
       type: Schema.Types.ObjectId,
       ref: 'Project',
       required: true,
+      index: true,
+    },
+    taskId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Task',
     },
     action: {
       type: String,
@@ -35,6 +41,9 @@ const activityLogSchema = new Schema<IActivityLog>(
     timestamps: true,
   }
 );
+
+// Search indexes
+activityLogSchema.index({ createdAt: -1 });
 
 const ActivityLog = model<IActivityLog>('ActivityLog', activityLogSchema);
 export default ActivityLog;

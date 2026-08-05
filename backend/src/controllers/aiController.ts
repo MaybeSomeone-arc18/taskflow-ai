@@ -29,8 +29,13 @@ export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => 
     throw new Error('User context missing');
   }
 
-  // Load all pending tasks belonging to projects owned by user
-  const userProjects = await Project.find({ createdBy: userId });
+  // Load all pending tasks belonging to projects owned or shared by user
+  const userProjects = await Project.find({ 
+    $or: [
+      { createdBy: userId },
+      { 'members.userId': userId }
+    ]
+  });
   const projectIds = userProjects.map((p) => p._id);
 
   if (projectIds.length === 0) {
@@ -40,6 +45,10 @@ export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => 
   const pendingTasks = await Task.find({
     projectId: { $in: projectIds },
     status: { $ne: 'Completed' },
+    $or: [
+      { assignedTo: userId },
+      { assignedTo: null }
+    ]
   }).select('title priority estimatedHours dueDate');
 
   if (pendingTasks.length === 0) {
@@ -54,26 +63,8 @@ export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => 
 // @route   POST /api/v1/ai/project-health
 // @access  Private
 export const getProjectHealth = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { projectId } = req.body;
-  const userId = req.user?._id;
-
-  if (!projectId) {
-    return next(new AppError('Project ID is required', 400));
-  }
-
-  if (!userId) {
-    throw new Error('User context missing');
-  }
-
-  const project = await Project.findById(projectId);
-  if (!project) {
-    return next(new AppError('Project not found', 404));
-  }
-
-  // Ownership authorization gate
-  if (project.createdBy.toString() !== userId.toString()) {
-    return next(new AppError('Permission denied, you do not own this project', 403));
-  }
+  // loadProject middleware handles finding the project and checking membership
+  const project = (req as any).project;
 
   const tasks = await Task.find({ projectId: project._id }).select('title status priority dueDate');
 
@@ -95,26 +86,8 @@ export const getProjectHealth = asyncHandler(async (req: Request, res: Response,
 // @route   POST /api/v1/ai/sprint-summary
 // @access  Private
 export const getSprintSummary = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { projectId } = req.body;
-  const userId = req.user?._id;
-
-  if (!projectId) {
-    return next(new AppError('Project ID is required', 400));
-  }
-
-  if (!userId) {
-    throw new Error('User context missing');
-  }
-
-  const project = await Project.findById(projectId);
-  if (!project) {
-    return next(new AppError('Project not found', 404));
-  }
-
-  // Ownership authorization gate
-  if (project.createdBy.toString() !== userId.toString()) {
-    return next(new AppError('Permission denied, you do not own this project', 403));
-  }
+  // loadProject middleware handles finding the project and checking membership
+  const project = (req as any).project;
 
   const completedTasks = await Task.find({ projectId: project._id, status: 'Completed' }).select('title');
   const pendingTasks = await Task.find({ projectId: project._id, status: { $ne: 'Completed' } }).select('title status priority');

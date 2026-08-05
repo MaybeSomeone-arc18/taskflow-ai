@@ -4,7 +4,12 @@ import ActivityLog from '../models/ActivityLog';
 import { Types } from 'mongoose';
 
 export const getDashboardStats = async (userId: string) => {
-  const userProjectDocs = await Project.find({ createdBy: new Types.ObjectId(userId) });
+  const userProjectDocs = await Project.find({ 
+    $or: [
+      { createdBy: new Types.ObjectId(userId) },
+      { 'members.userId': new Types.ObjectId(userId) }
+    ]
+  });
   const projectIds = userProjectDocs.map((p) => p._id);
 
   const totalProjects = userProjectDocs.length;
@@ -23,21 +28,26 @@ export const getDashboardStats = async (userId: string) => {
     };
   }
 
-  // Task Counts
-  const totalTasks = await Task.countDocuments({ projectId: { $in: projectIds } });
+  // Task Counts (Personal tasks only)
+  const taskQueryBase = { 
+    projectId: { $in: projectIds }, 
+    assignedTo: new Types.ObjectId(userId)
+  };
+
+  const totalTasks = await Task.countDocuments(taskQueryBase);
   const completedTasks = await Task.countDocuments({
-    projectId: { $in: projectIds },
+    ...taskQueryBase,
     status: 'Completed',
   });
   const pendingTasks = await Task.countDocuments({
-    projectId: { $in: projectIds },
+    ...taskQueryBase,
     status: { $in: ['Todo', 'In Progress'] },
   });
 
   // Overdue Tasks: not Completed and dueDate is in the past
   const now = new Date();
   const overdueTasks = await Task.countDocuments({
-    projectId: { $in: projectIds },
+    ...taskQueryBase,
     status: { $ne: 'Completed' },
     dueDate: { $lt: now },
   });
@@ -51,7 +61,7 @@ export const getDashboardStats = async (userId: string) => {
   endOfToday.setHours(23, 59, 59, 999);
 
   const todayTasks = await Task.find({
-    projectId: { $in: projectIds },
+    ...taskQueryBase,
     dueDate: { $gte: startOfToday, $lte: endOfToday },
   }).populate('assignedTo', 'fullName email avatarUrl');
 
@@ -61,7 +71,7 @@ export const getDashboardStats = async (userId: string) => {
   endOfUpcoming.setHours(23, 59, 59, 999);
 
   const upcomingDeadlines = await Task.find({
-    projectId: { $in: projectIds },
+    ...taskQueryBase,
     status: { $ne: 'Completed' },
     dueDate: { $gt: endOfToday, $lte: endOfUpcoming },
   })
@@ -108,7 +118,12 @@ export const getDashboardStats = async (userId: string) => {
 };
 
 export const getChartData = async (userId: string) => {
-  const userProjectDocs = await Project.find({ createdBy: new Types.ObjectId(userId) });
+  const userProjectDocs = await Project.find({ 
+    $or: [
+      { createdBy: new Types.ObjectId(userId) },
+      { 'members.userId': new Types.ObjectId(userId) }
+    ]
+  });
   const projectIds = userProjectDocs.map((p) => p._id);
 
   if (projectIds.length === 0) {
@@ -122,8 +137,13 @@ export const getChartData = async (userId: string) => {
   }
 
   // 1. Tasks by Status Aggregation
+  const taskMatch = { 
+    projectId: { $in: projectIds },
+    assignedTo: new Types.ObjectId(userId)
+  };
+
   const statusAggregation = await Task.aggregate([
-    { $match: { projectId: { $in: projectIds } } },
+    { $match: taskMatch },
     { $group: { _id: '$status', count: { $sum: 1 } } },
   ]);
 
@@ -134,7 +154,7 @@ export const getChartData = async (userId: string) => {
 
   // 2. Tasks by Priority Aggregation
   const priorityAggregation = await Task.aggregate([
-    { $match: { projectId: { $in: projectIds } } },
+    { $match: taskMatch },
     { $group: { _id: '$priority', count: { $sum: 1 } } },
   ]);
 
@@ -151,7 +171,7 @@ export const getChartData = async (userId: string) => {
   const weeklyAggregation = await Task.aggregate([
     {
       $match: {
-        projectId: { $in: projectIds },
+        ...taskMatch,
         createdAt: { $gte: sevenDaysAgo },
       },
     },
@@ -180,8 +200,12 @@ export const getChartData = async (userId: string) => {
   // 4. Project Completion Progress
   const projectProgress = [];
   for (const proj of userProjectDocs) {
-    const total = await Task.countDocuments({ projectId: proj._id });
-    const completed = await Task.countDocuments({ projectId: proj._id, status: 'Completed' });
+    const projMatch = { projectId: proj._id, assignedTo: new Types.ObjectId(userId) };
+    const total = await Task.countDocuments(projMatch);
+    // Skip projects where the user has no tasks assigned
+    if (total === 0) continue;
+    
+    const completed = await Task.countDocuments({ ...projMatch, status: 'Completed' });
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     projectProgress.push({
       _id: proj._id,
@@ -194,9 +218,9 @@ export const getChartData = async (userId: string) => {
   }
 
   // 5. Productivity Score
-  const totalTasks = await Task.countDocuments({ projectId: { $in: projectIds } });
+  const totalTasks = await Task.countDocuments(taskMatch);
   const completedTasks = await Task.countDocuments({
-    projectId: { $in: projectIds },
+    ...taskMatch,
     status: 'Completed',
   });
   const productivityScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;

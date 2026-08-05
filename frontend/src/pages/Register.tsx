@@ -33,6 +33,9 @@ export const Register: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   const {
     register,
     handleSubmit,
@@ -75,7 +78,7 @@ export const Register: React.FC = () => {
       if (credentialResponse.credential) {
         await loginWithGoogle(credentialResponse.credential);
         setSuccessMsg('Google signup successful. Redirecting...');
-        setTimeout(() => navigate('/'), 900);
+        setTimeout(() => navigate(redirectUrl), 900);
       }
     } catch (err) {
       setErrorMsg((err as Error).message);
@@ -90,7 +93,7 @@ export const Register: React.FC = () => {
     try {
       await loginAsGuest();
       setSuccessMsg('Guest session created. Redirecting...');
-      setTimeout(() => navigate('/'), 900);
+      setTimeout(() => navigate(redirectUrl), 900);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setIsSubmitting(false);
@@ -104,7 +107,7 @@ export const Register: React.FC = () => {
     try {
       await registerUser(data.fullName, data.email, data.password);
       setSuccessMsg('Account created! Loading your workspace...');
-      setTimeout(() => navigate('/'), 900);
+      setTimeout(() => navigate(redirectUrl), 900);
     } catch (err) {
       setErrorMsg((err as Error).message);
       setIsSubmitting(false);
@@ -320,7 +323,7 @@ export const Register: React.FC = () => {
         </p>
         <p className="text-center text-sm text-content-secondary">
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+          <Link to={`/login${location.search}`} className="font-semibold text-primary hover:text-primary-hover transition-colors">
             Sign In
           </Link>
         </p>

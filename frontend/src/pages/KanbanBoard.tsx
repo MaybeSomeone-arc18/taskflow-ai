@@ -21,7 +21,8 @@ import {
   Trash2,
   X,
   PlusCircle,
-  FolderDot
+  FolderDot,
+  Share2
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -30,6 +31,8 @@ import { Input } from '../components/ui/Input';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Skeleton } from '../components/ui/LoadingSkeleton';
 import { PageHeader } from '../components/ui/PageHeader';
+import { Avatar } from '../components/ui/Avatar';
+import { ShareModal } from '../components/ShareModal';
 import { motion } from 'framer-motion';
 import { cn } from '../utils/cn';
 
@@ -70,16 +73,18 @@ export const KanbanBoard: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<Task['status']>('Todo');
   const [priority, setPriority] = useState<Task['priority']>('Medium');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState<string>('');
   const [estimatedHours, setEstimatedHours] = useState<number>(0);
   const [actualHours, setActualHours] = useState<number>(0);
-  const [tagsInput, setTagsInput] = useState('');
+  const [tagsInput, setTagsInput] = useState<string>('');
+  const [assignedTo, setAssignedTo] = useState<string>('');
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -149,7 +154,7 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       const parsedTags = tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
-      const createdTask = await createTask({ title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags, projectId: projectId as any });
+      const createdTask = await createTask({ title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags, projectId: projectId as any, assignedTo: (assignedTo || null) as any });
       eventBus.emit('new_notification', {
         title: 'Task Created',
         message: `Task "${createdTask.title}" was successfully added to ${project?.title}.`,
@@ -159,7 +164,7 @@ export const KanbanBoard: React.FC = () => {
       eventBus.emit('refresh_dashboard');
       eventBus.emit('refresh_analytics');
       setIsCreateOpen(false);
-      setTitle(''); setDescription(''); setStatus('Todo'); setPriority('Medium'); setDueDate(''); setEstimatedHours(0); setActualHours(0); setTagsInput('');
+      setTitle(''); setDescription(''); setStatus('Todo'); setPriority('Medium'); setDueDate(''); setEstimatedHours(0); setActualHours(0); setTagsInput(''); setAssignedTo('');
       fetchTasksList();
     } catch (err) { setActionError((err as Error).message); }
     finally { setActionLoading(false); }
@@ -189,6 +194,7 @@ export const KanbanBoard: React.FC = () => {
     setSelectedTask(task); setTitle(task.title); setDescription(task.description); setStatus(task.status); setPriority(task.priority);
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().substring(0, 10) : '');
     setEstimatedHours(task.estimatedHours); setActualHours(task.actualHours); setTagsInput(task.tags.join(', '));
+    setAssignedTo(task.assignedTo ? task.assignedTo._id : '');
     setIsEditOpen(true);
   }, []);
 
@@ -202,7 +208,7 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       const parsedTags = tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
-      const updatedTask = await updateTask(selectedTask._id, { title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags });
+      const updatedTask = await updateTask(selectedTask._id, { title: title.trim(), description: description.trim(), status, priority, dueDate: dueDate ? new Date(dueDate) as any : undefined, estimatedHours, actualHours, tags: parsedTags, assignedTo: (assignedTo || null) as any });
       if (status === 'Completed' && selectedTask.status !== 'Completed') {
         eventBus.emit('new_notification', {
           title: 'Task Completed',
@@ -296,6 +302,25 @@ export const KanbanBoard: React.FC = () => {
           </select>
         </div>
       </div>
+      <div>
+        <label className={LABEL}>Assigned To</label>
+        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={SELECT}>
+          <option value="">No Assignee</option>
+          {project?.members?.map((m: any) => {
+            const user = m.userId;
+            if (!user || typeof user === 'string') return null; // Safe check
+            return (
+              <option key={user._id} value={user._id}>
+                {user.fullName}
+              </option>
+            );
+          })}
+          {/* Also include the creator if not in members, though typically they are */}
+          {project?.createdBy && !project.members?.some((m: any) => m.userId?._id === project.createdBy) && (
+            <option value={project.createdBy}>Project Creator</option>
+          )}
+        </select>
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={LABEL}>Est. Hours</label>
@@ -342,13 +367,40 @@ export const KanbanBoard: React.FC = () => {
               )}
             </div>
           </div>
-          <Button
-            variant="primary"
-            icon={<PlusCircle className="h-4 w-4" />}
-            onClick={() => { setActionError(null); setIsCreateOpen(true); }}
-          >
-            Create Task
-          </Button>
+          <div className="flex items-center gap-4">
+            {project.members && project.members.length > 0 && (
+              <div className="flex -space-x-2 mr-2">
+                {project.members.slice(0, 4).map((member: any, i) => (
+                  <Avatar
+                    key={member.userId._id || member.userId}
+                    src={member.userId.avatarUrl}
+                    fallback={member.userId.fullName || '?'}
+                    size="md"
+                    className={`ring-2 ring-surface z-[${4 - i}]`}
+                  />
+                ))}
+                {project.members.length > 4 && (
+                  <div className="relative flex shrink-0 h-8 w-8 items-center justify-center rounded-full ring-2 ring-surface bg-surface-hover text-content-muted text-xs font-semibold z-0">
+                    +{project.members.length - 4}
+                  </div>
+                )}
+              </div>
+            )}
+            <Button
+              variant="secondary"
+              icon={<Share2 className="h-4 w-4" />}
+              onClick={() => setIsShareOpen(true)}
+            >
+              Share
+            </Button>
+            <Button
+              variant="primary"
+              icon={<PlusCircle className="h-4 w-4" />}
+              onClick={() => { setActionError(null); setIsCreateOpen(true); }}
+            >
+              Create Task
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -589,6 +641,17 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {project && (
+        <ShareModal 
+          project={project} 
+          isOpen={isShareOpen} 
+          onClose={() => setIsShareOpen(false)} 
+          onInviteGenerated={(token) => {
+            setProject((prev) => prev ? { ...prev, invite: { ...prev.invite, token } as any } : null);
+          }}
+        />
+      )}
     </motion.div>
   );
 };
