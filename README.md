@@ -246,7 +246,7 @@ Create a `.env` file for the backend and a `.env` file for the frontend.
 | `JWT_SECRET` | Secret key for signing JSON Web Tokens | `your_super_secret_key_123` |
 | `CLIENT_URL` | The URL of your frontend application | `http://localhost:5173` |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID for token verification | `your-google-client-id...` |
-| `GEMINI_API_KEY` | Google Gemini API Key for AI features | `AIzaSy...` |
+| `GEMINI_API_KEY` | Google Gemini API Key for AI features | `your-gemini-api-key` |
 
 ---
 
