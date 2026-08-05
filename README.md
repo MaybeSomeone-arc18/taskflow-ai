@@ -98,35 +98,47 @@ While platforms like Trello, Notion, and ClickUp are powerful, TaskFlow AI diffe
 - **Task CRUD:** Full lifecycle management for individual tasks.
 - **Smart Status Management:** Automatically updates workflows.
 
-### ⚙️ Settings
-- **Theme Persistence:** Stores user preferences in `localStorage`.
+### 🤝 Collaboration
+- **Collaborative Projects:** Work together natively with multi-user project collaboration.
+- **Secure Invite Link Sharing:** Share projects safely with rotation and expiry.
+- **Member Management:** Track members and control access.
+- **Task Assignment:** Assign specific tasks to individual project members.
+- **Activity Logging:** Comprehensive audit logs for project and task actions.
+
+### ⚙️ Settings & Experience
+- **Theme Persistence:** Stores user preferences in `localStorage` for Dark / Light Theme.
 - **Accent Color Customization:** Personalize the UI look and feel.
 - **Layout Preferences:** Adjust the workspace density to your liking.
+- **Glassmorphism UI:** Premium visual aesthetic with translucent elements.
+- **Reduced Motion Support:** Accessible animations tailored to user settings.
+
+### 📈 Analytics
+- **Personal Analytics:** Productivity metrics are strictly isolated based on your assigned tasks.
 
 ---
 
 ## 📊 System Design & Architecture
 
 ```text
- ┌────────────────────────────────────────────────────────┐
- │                      REACT UI                          │
- │  (Vite, Tailwind, Framer Motion, React Router, Axios)  │
- └──────────────────────────┬─────────────────────────────┘
-                            │ (RESTful JSON over HTTP)
- ┌──────────────────────────▼─────────────────────────────┐
- │                     API LAYER                          │
- │      (Authentication, Input Validation, Routing)       │
- └──────────────────────────┬─────────────────────────────┘
-                            │
- ┌──────────────────────────▼─────────────────────────────┐
- │                   EXPRESS SERVER                       │
- │      (Node.js, Controllers, Services, Middleware)      │
- └─────────────┬───────────────────────────┬──────────────┘
-               │                           │
- ┌─────────────▼──────────────┐  ┌─────────▼──────────────┐
- │          DATABASE          │  │        AI ENGINE       │
- │   (MongoDB & Mongoose)     │  │ (Google Gemini API)    │
- └────────────────────────────┘  └────────────────────────┘
+User
+   │
+   ▼
+Authentication
+   │
+   ▼
+Projects
+ ├── Owner
+ ├── Members
+ ├── Invite Links
+ │
+ ▼
+Tasks
+ ├── Assignment
+ ├── Activity
+ │
+ ▼
+AI
+Analytics
 ```
 
 ---
@@ -147,9 +159,13 @@ While platforms like Trello, Notion, and ClickUp are powerful, TaskFlow AI diffe
 - **Framework:** Express.js
 - **Database:** MongoDB
 - **ORM/ODM:** Mongoose
-- **Authentication:** JWT (JSON Web Tokens) & bcrypt
+- **Authentication:** JWT (JSON Web Tokens), bcrypt, & Google OAuth
 - **AI Integration:** `@google/genai` (Gemini API)
 - **Language:** TypeScript
+
+### Deployment
+- **Frontend:** Vercel
+- **Backend:** Render
 
 ---
 
@@ -300,7 +316,7 @@ npm run build
 
 TaskFlow AI features a multi-tiered authentication system ensuring a smooth user experience while maintaining robust security. 
 
-Users can log in via **Traditional Login (Email/Password)**, **Google OAuth**, or **Guest Mode**. Google users are securely verified on the backend using the `google-auth-library` before a session is granted. All flows converge to issue a signed JSON Web Token (JWT), which is used to guard Protected Routes.
+Users can log in via **Email & Password Authentication**, **Google OAuth**, or **Guest Login**. Google users are securely verified on the backend using the `google-auth-library` before a session is granted. All flows converge to issue a signed JSON Web Token (**JWT Authentication**), which is used to guard Protected Routes.
 
 ```text
 [ User ] 
@@ -335,6 +351,13 @@ TaskFlow AI seamlessly integrates **Google Gemini** to elevate your workflow fro
 5. **Task Suggestions:** The parsed array of sub-tasks, complete with estimated effort and priority, is generated.
 6. **Displayed in AI Panel:** The frontend renders the suggestions, allowing the user to seamlessly add them to their Kanban board.
 
+**Key AI Capabilities:**
+- **AI Task Breakdown:** Automatically splits large objectives into actionable sub-tasks.
+- **Daily Planner:** Generates an optimized daily schedule based on active priorities.
+- **Project Health:** Assesses the current status and risks of your projects.
+
+*Privacy Note:* Within collaborative projects, the AI context window explicitly exposes only **your assigned tasks** and **unassigned tasks**. It never exposes your teammates' assigned tasks, ensuring strict privacy isolation.
+
 ---
 
 ## ⚡ Performance
@@ -351,11 +374,25 @@ TaskFlow AI seamlessly integrates **Google Gemini** to elevate your workflow fro
 - **JWT Authentication:** Stateless, signed tokens securely manage sessions.
 - **Password Hashing:** `bcrypt` prevents raw passwords from being stored in the database.
 - **Google OAuth Verification:** Backend explicitly verifies Google ID tokens rather than trusting the client.
-- **Protected Routes:** Frontend routing and backend middleware enforce authorization checks.
+- **Route Protection:** Frontend routing and backend middleware enforce strict authorization checks.
+- **Member Authorization Middleware:** Verifies project membership at the request level before granting access to project resources or tasks.
+- **Invite Token Expiry:** Secure, cryptographically generated invite links expire automatically and rotate on demand.
 - **CORS:** Cross-Origin Resource Sharing is strictly configured to only accept requests from the frontend client.
-- **Rate Limiting:** `express-rate-limit` mitigates brute-force attacks on auth endpoints.
+- **Rate Limiting:** `express-rate-limit` mitigates brute-force attacks on auth endpoints and prevents invite generation spam.
+- **Graceful Shutdown:** The server executes a controlled close on critical exceptions, preventing active requests from being abruptly dropped.
 - **Environment Variables:** Sensitive keys are kept completely out of the source code.
 - **Input Validation:** Zod (Frontend) and Joi/Mongoose (Backend) ensure all inputs are sanitized.
+
+---
+
+## 🤝 Collaboration
+
+TaskFlow AI Version 2.0 introduces native multi-player workspace features:
+- **Project Sharing:** Easily share workspaces with other users.
+- **Invite Links:** Generate secure tokens to securely onboard members.
+- **Member Management:** Project creators can view and remove members on demand.
+- **Task Assignment:** Tasks can be explicitly assigned to project members to eliminate workflow ambiguity.
+- **Activity Tracking:** A detailed audit log tracks core project lifecycle events (joins, leaves, task creation, assignments, and completions).
 
 ---
 
@@ -399,6 +436,9 @@ The platform is designed to be easily deployed to modern cloud providers:
 ---
 
 ## 📈 Future Vision & Roadmap
+
+- [x] **Collaborative Projects:** Invite links, task assignment, and shared workspaces (Released in v2.0).
+- [x] **Data Privacy Isolation:** Analytics and AI models isolate data by assignee (Released in v2.0).
 
 - [ ] **Real-time Collaboration:** WebSockets for live Kanban board updates across teams.
 - [ ] **Team Workspaces:** Role-based access control (Admin, Member, Viewer).
