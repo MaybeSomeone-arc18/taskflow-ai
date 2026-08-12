@@ -1,8 +1,8 @@
 <div align="center">
   
-  # 🚀 TaskFlow AI
+  # TaskFlow AI
   
-  **An AI-powered intelligent project management platform that helps teams organize work, analyze productivity, automate planning, and gain actionable insights using Google Gemini AI.**
+  **The work, made clear. TaskFlow AI helps your team plan with intention, see what's really moving, and turn everyday effort into insight — powered by Google Gemini.**
   
   <p align="center">
     <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /></a>
@@ -23,7 +23,7 @@
     <img src="https://img.shields.io/github/forks/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Forks" />
     <img src="https://img.shields.io/github/issues/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Issues" />
     <img src="https://img.shields.io/github/last-commit/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Last Commit" />
-    <img src="https://img.shields.io/github/repo-size/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Repo Size" />
+
   </p>
 
 </div>
