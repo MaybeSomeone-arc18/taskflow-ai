@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Activity, CheckCircle2, Zap, Brain, TrendingUp, Loader2 } from 'lucide-react';
+import { Activity, CheckCircle2, Zap, Brain, TrendingUp, Loader2, Github } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const FEATURES = [
@@ -167,6 +167,17 @@ export const AuthLayout: React.FC = () => {
           </div>
           <span className="text-sm font-bold text-content">TaskFlow AI</span>
         </div>
+
+        {/* GitHub Link */}
+        <a 
+          href="https://github.com/MaybeSomeone-arc18/taskflow-ai" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full border border-border-subtle bg-surface/50 text-content-secondary hover:text-content hover:bg-surface transition-all duration-200 backdrop-blur-sm shadow-sm"
+        >
+          <Github className="h-4 w-4" />
+          <span className="text-sm font-semibold tracking-wide">GitHub</span>
+        </a>
 
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
