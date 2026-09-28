@@ -10,7 +10,9 @@
     "prebuild": "npm install",
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "test": "npm run build:ci && node --test tests/*.test.cjs",
+    "build:ci": "tsc"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
