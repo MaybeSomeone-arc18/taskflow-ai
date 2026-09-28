@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 
 export const getDashboardStats = async (userId: string) => {
   const userProjectDocs = await Project.find({ 
+    status: 'Active',
     $or: [
       { createdBy: new Types.ObjectId(userId) },
       { 'members.userId': new Types.ObjectId(userId) }
@@ -119,6 +120,7 @@ export const getDashboardStats = async (userId: string) => {
 
 export const getChartData = async (userId: string) => {
   const userProjectDocs = await Project.find({ 
+    status: 'Active',
     $or: [
       { createdBy: new Types.ObjectId(userId) },
       { 'members.userId': new Types.ObjectId(userId) }
