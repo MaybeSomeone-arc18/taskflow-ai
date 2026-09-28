@@ -35,7 +35,7 @@ export interface Task {
   estimatedHours: number;
   actualHours: number;
   tags: string[];
-  createdBy: string;
+  createdBy: string | User;
   assignedTo?: User | null;
   createdAt: string;
   updatedAt: string;
