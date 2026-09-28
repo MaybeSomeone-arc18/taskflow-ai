@@ -29,10 +29,13 @@ export const getDashboardStats = async (userId: string) => {
     };
   }
 
-  // Task Counts (Personal tasks only)
+  // Include assigned tasks and tasks created by this user (even if unassigned).
   const taskQueryBase = { 
     projectId: { $in: projectIds }, 
-    assignedTo: new Types.ObjectId(userId)
+    $or: [
+      { assignedTo: new Types.ObjectId(userId) },
+      { createdBy: new Types.ObjectId(userId) },
+    ]
   };
 
   const totalTasks = await Task.countDocuments(taskQueryBase);
@@ -141,7 +144,10 @@ export const getChartData = async (userId: string) => {
   // 1. Tasks by Status Aggregation
   const taskMatch = { 
     projectId: { $in: projectIds },
-    assignedTo: new Types.ObjectId(userId)
+    $or: [
+      { assignedTo: new Types.ObjectId(userId) },
+      { createdBy: new Types.ObjectId(userId) },
+    ]
   };
 
   const statusAggregation = await Task.aggregate([
@@ -202,7 +208,9 @@ export const getChartData = async (userId: string) => {
   // 4. Project Completion Progress
   const projectProgress = [];
   for (const proj of userProjectDocs) {
-    const projMatch = { projectId: proj._id, assignedTo: new Types.ObjectId(userId) };
+    const projMatch = { projectId: proj._id, $or: [
+      { assignedTo: new Types.ObjectId(userId) }, { createdBy: new Types.ObjectId(userId) }
+    ] };
     const total = await Task.countDocuments(projMatch);
     // Skip projects where the user has no tasks assigned
     if (total === 0) continue;
