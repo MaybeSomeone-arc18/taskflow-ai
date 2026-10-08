@@ -1,516 +1,143 @@
-<div align="center">
-  
-  # TaskFlow AI
-  
-  **The work, made clear. TaskFlow AI helps your team plan with intention, see what's really moving, and turn everyday effort into insight — powered by Google Gemini.**
-  
-  <p align="center">
-    <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
-    <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" /></a>
-    <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" /></a>
-    <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" /></a>
-    <a href="https://www.mongodb.com/"><img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" /></a>
-    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /></a>
-    <a href="https://deepmind.google/technologies/gemini/"><img src="https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI" /></a>
-  </p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=JSON%20web%20tokens&logoColor=white" alt="JWT" />
-    <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white" alt="Framer Motion" />
-    <img src="https://img.shields.io/badge/Recharts-22B5BF?style=flat-square" alt="Recharts" />
-    <img src="https://img.shields.io/github/license/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="License" />
-    <img src="https://img.shields.io/github/stars/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Stars" />
-    <img src="https://img.shields.io/github/forks/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Forks" />
-    <img src="https://img.shields.io/github/issues/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Issues" />
-    <img src="https://img.shields.io/github/last-commit/MaybeSomeone-arc18/taskflow-ai?style=flat-square" alt="Last Commit" />
+# TaskFlow AI
 
-  </p>
+Keeping tasks in a list is easy. Knowing what needs attention across a few projects is harder.
 
-</div>
+I'm building TaskFlow to keep projects, tasks, and planning in one place. It has a Kanban board, shared projects, a dashboard, and a Gemini-powered planner. The planner suggests work; you decide what to add to the board.
 
----
+## What's there
 
-## 📑 Table of Contents
+- Create projects, invite people with a link, and assign tasks to members.
+- Move tasks between Todo, In Progress, and Completed. Set priorities, deadlines, tags, and effort estimates.
+- See task counts, upcoming deadlines, recent activity, and charts.
+- Ask for a task breakdown, daily plan, project health report, or sprint summary. Import suggested tasks into a project.
+- Sign in with email and password, Google, or a guest account.
+- Switch between light and dark themes and change accent colors.
 
-<details>
-<summary>Click to expand</summary>
+This is a work in progress, not an autonomous project manager. AI output needs review, and shared boards don't have live updates between clients.
 
-- [Overview](#-overview)
-- [Why TaskFlow AI?](#-why-taskflow-ai)
-- [Features](#-features)
-- [System Design & Architecture](#-system-design--architecture)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Installation](#-installation)
-- [Environment Variables](#-environment-variables)
-- [Run Project](#-run-project)
-- [API Endpoints](#-api-endpoints)
-- [Authentication](#-authentication)
-- [AI Workflow & Features](#-ai-workflow--features)
-- [Performance](#-performance)
-- [Future Vision & Roadmap](#-future-vision--roadmap)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Developer](#-developer)
+## Stack
 
-</details>
+React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, and Recharts on the frontend. Express, TypeScript, MongoDB/Mongoose, JWT, and bcrypt on the backend.
 
----
+The AI service uses `@google/generative-ai` with `gemini-2.5-flash`. Google sign-in uses Google Identity Services on the frontend and `google-auth-library` to verify ID tokens on the backend.
 
-## 🔭 Overview
+## Run locally
 
-**TaskFlow AI** is a next-generation project management tool built for modern teams. Moving beyond simple task tracking, TaskFlow AI leverages the power of Google Gemini AI to act as a proactive project manager—helping you break down complex projects, prioritize work intelligently, and analyze productivity trends. 
+Use Node.js 20 (the version used in CI), npm, and a running MongoDB instance. A Gemini key is needed for model-generated plans. Google sign-in needs a client ID configured for your local frontend origin.
 
-From its premium glassmorphism UI to its deeply integrated AI capabilities, TaskFlow AI provides a seamless workspace to manage everything from daily to-dos to large-scale team projects.
-
----
-
-## 🏆 Why TaskFlow AI?
-
-While platforms like Trello, Notion, and ClickUp are powerful, TaskFlow AI differentiates itself through **native AI integration** and a **premium, distraction-free aesthetic**.
-
-- **AI-First Design:** It doesn't just store your tasks; it analyzes them. Gemini AI automatically suggests priority levels, identifies bottlenecks, and helps break down vague goals into actionable subtasks.
-- **Productivity Analytics:** Deep insights into how you work, complete with beautiful visualizations powered by Recharts.
-- **Premium UX:** Built to feel like a high-end macOS application or top-tier SaaS (Linear/Raycast style) with smooth Framer Motion animations, customizable accent colors, and persistent Dark Mode.
-
----
-
-## ✨ Features
-
-### 🔐 Authentication
-- **Google OAuth (Google Identity Services):** Seamless one-tap login.
-- **Continue as Guest:** Instant access without account creation.
-- **Email/Password Authentication:** Traditional signup with secure password hashing.
-- **JWT Authentication:** Stateless and secure session management.
-- **Protected Routes:** React Router guarding private application views.
-- **Google Account Linking:** Automatically links Google logins to existing accounts.
-
-### 🧠 AI Integration
-- **AI Task Breakdown:** Gemini AI intelligently splits large projects into manageable tasks.
-- **AI Insights:** Daily planning and productivity suggestions.
-- **Estimated Effort:** Automatically estimates task complexity.
-- **Gemini-powered Project Planning:** Native integration with Google's latest models.
-
-### 📋 Task Management
-- **Drag & Drop Kanban:** Move tasks seamlessly across columns.
-- **Bulk Task Creation:** Add multiple tasks efficiently.
-- **Project CRUD:** Create, read, update, and delete projects.
-- **Task CRUD:** Full lifecycle management for individual tasks.
-- **Smart Status Management:** Automatically updates workflows.
-
-### 🤝 Collaboration
-- **Collaborative Projects:** Work together natively with multi-user project collaboration.
-- **Secure Invite Link Sharing:** Share projects safely with rotation and expiry.
-- **Member Management:** Track members and control access.
-- **Task Assignment:** Assign specific tasks to individual project members.
-- **Activity Logging:** Comprehensive audit logs for project and task actions.
-
-### ⚙️ Settings & Experience
-- **Theme Persistence:** Stores user preferences in `localStorage` for Dark / Light Theme.
-- **Accent Color Customization:** Personalize the UI look and feel.
-- **Layout Preferences:** Adjust the workspace density to your liking.
-- **Glassmorphism UI:** Premium visual aesthetic with translucent elements.
-- **Reduced Motion Support:** Accessible animations tailored to user settings.
-
-### 📈 Analytics
-- **Personal Analytics:** Productivity metrics are strictly isolated based on your assigned tasks.
-
----
-
-## 📊 System Design & Architecture
-
-```text
-User
-   │
-   ▼
-Authentication
-   │
-   ▼
-Projects
- ├── Owner
- ├── Members
- ├── Invite Links
- │
- ▼
-Tasks
- ├── Assignment
- ├── Activity
- │
- ▼
-AI
-Analytics
-```
-
----
-
-## 💻 Tech Stack
-
-### Frontend
-- **Framework:** React 18 with TypeScript (via Vite)
-- **Styling:** Tailwind CSS (v4)
-- **Animations:** Framer Motion
-- **Icons:** Lucide React
-- **Data Visualization:** Recharts
-- **Networking:** Axios with global interceptors
-- **Routing:** React Router v6
-
-### Backend
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **Database:** MongoDB
-- **ORM/ODM:** Mongoose
-- **Authentication:** JWT (JSON Web Tokens), bcrypt, & Google OAuth
-- **AI Integration:** `@google/genai` (Gemini API)
-- **Language:** TypeScript
-
-### Deployment
-- **Frontend:** Vercel
-- **Backend:** Render
-
----
-
-## 📁 Project Structure
-
-```text
-taskflow-ai/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/    # Request handlers (e.g., auth.controller.ts)
-│   │   ├── middleware/     # Custom Express middleware (e.g., auth, errors)
-│   │   ├── models/         # Mongoose schemas (User, Task, Project)
-│   │   ├── routes/         # Express API routes
-│   │   ├── services/       # Business logic (e.g., AI integration)
-│   │   ├── app.ts          # Express app configuration
-│   │   └── server.ts       # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
-│
-└── frontend/
-    ├── src/
-    │   ├── components/     # Reusable UI components (Buttons, Cards, Inputs)
-    │   ├── context/        # React Contexts (Auth, Theme, Notifications)
-    │   ├── hooks/          # Custom React hooks
-    │   ├── layouts/        # Page layouts (Sidebar, Header)
-    │   ├── pages/          # Main application views (Dashboard, Settings, etc.)
-    │   ├── services/       # API integration layer
-    │   ├── types/          # TypeScript interfaces
-    │   ├── utils/          # Helper functions
-    │   ├── App.tsx         # Root component & routing
-    │   └── index.css       # Global styles & Tailwind config
-    ├── index.html
-    ├── vite.config.ts
-    └── package.json
-```
-
----
-
-## 🚀 Installation
-
-Follow these steps to get the project running locally.
-
-**1. Clone the repository**
 ```bash
 git clone https://github.com/MaybeSomeone-arc18/taskflow-ai.git
 cd taskflow-ai
+
+npm ci --prefix backend
+npm ci --prefix frontend
+cp backend/.env.example backend/.env
 ```
 
-**2. Install Frontend Dependencies**
-```bash
-cd frontend
-npm install
+Edit `backend/.env`:
+
+```dotenv
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/taskflow-ai
+JWT_SECRET=replace-with-a-long-random-secret
+JWT_EXPIRES_IN=7d
+CLIENT_URL=http://localhost:5173
+NODE_ENV=development
+# Optional: enable Gemini and Google sign-in
+GEMINI_API_KEY=
+GOOGLE_CLIENT_ID=
 ```
 
-**3. Install Backend Dependencies**
-```bash
-cd ../backend
-npm install
+Use `MONGODB_URI`, not `MONGO_URI`. Set your own `JWT_SECRET`; the code's local-development fallback is not suitable for deployment.
+
+Create `frontend/.env`:
+
+```dotenv
+VITE_API_URL=http://localhost:5000/api/v1
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
----
+For Google sign-in, use the same client ID in both env files. You can use email/password or guest login without setting up Google sign-in.
 
-## 🔐 Environment Variables
+Start the backend:
 
-Create a `.env` file for the backend and a `.env` file for the frontend.
-
-### Frontend (`frontend/.env`)
-| Variable | Description | Example |
-|:---|:---|:---|
-| `VITE_API_URL` | The URL of your backend API | `http://localhost:5000/api/v1` |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID | `your-google-client-id.apps.googleusercontent.com` |
-
-### Backend (`backend/.env`)
-| Variable | Description | Example |
-|:---|:---|:---|
-| `PORT` | The port for the Express server | `5000` |
-| `MONGO_URI` | Your MongoDB connection string | `mongodb://localhost:27017/taskflow` |
-| `JWT_SECRET` | Secret key for signing JSON Web Tokens | `your_super_secret_key_123` |
-| `CLIENT_URL` | The URL of your frontend application | `http://localhost:5173` |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID for token verification | `your-google-client-id...` |
-| `GEMINI_API_KEY` | Google Gemini API Key for AI features | `your-gemini-api-key` |
-
----
-
-## ⚡ Run Project
-
-You will need two terminal windows to run both the frontend and backend simultaneously.
-
-### Development
-
-**Terminal 1 (Backend):**
 ```bash
 cd backend
 npm run dev
 ```
 
-**Terminal 2 (Frontend):**
+In another terminal, start the frontend:
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-### Production
+Open `http://localhost:5173`. The backend's health check is at `http://localhost:5000/health`.
 
-**Backend:**
+## Checks and builds
+
 ```bash
-cd backend
-npm run build
-npm start
+# Compile the backend and run its Node test suite
+npm test --prefix backend
+
+# Type-check and build the frontend
+npm run build --prefix frontend
 ```
 
-**Frontend:**
-```bash
-cd frontend
-npm run build
-# Serve the output from the `dist/` folder using Nginx, Vercel, or a static server.
-```
+GitHub Actions runs both checks on pushes to `main` and pull requests. Backend tests cover analytics/count regressions and utility functions; they are not an end-to-end test of the app.
 
----
+For a backend deployment, run `npm run build:ci --prefix backend`, then `npm start --prefix backend`. The frontend build outputs `frontend/dist`. Set `VITE_API_URL` before building the frontend and configure the backend env variables on your host. Keep API keys on the backend.
 
-## 🌐 API Endpoints
+## How the AI works
 
-<details>
-<summary><b>View Core API Endpoints</b></summary>
+The frontend sends requests to the Express API, which calls Gemini and parses its JSON response. Task breakdowns include suggested subtasks, priorities, and effort estimates. The daily planner uses pending tasks, priorities, effort, and due dates.
 
-| Method | Endpoint | Description | Auth Required |
-|:---|:---|:---|:---:|
-| **POST** | `/api/v1/auth/register` | Register a new user | ❌ |
-| **POST** | `/api/v1/auth/login` | Authenticate user & get JWT | ❌ |
-| **POST** | `/api/v1/auth/google` | Authenticate using Google OAuth ID token | ❌ |
-| **POST** | `/api/v1/auth/guest` | Create a temporary guest session | ❌ |
-| **GET**  | `/api/v1/auth/me` | Get current logged-in user profile | ✅ |
-| **PUT**  | `/api/v1/auth/password` | Change account password | ✅ |
-| **GET**  | `/api/v1/projects` | Get all workspace projects | ✅ |
-| **POST** | `/api/v1/projects` | Create a new project | ✅ |
-| **GET**  | `/api/v1/tasks` | Get all tasks (supports filtering) | ✅ |
-| **POST** | `/api/v1/tasks` | Create a new task | ✅ |
-| **PUT**  | `/api/v1/tasks/:id` | Update a task (status, priority, etc) | ✅ |
-| **DELETE**| `/api/v1/tasks/:id` | Delete a task | ✅ |
-| **POST** | `/api/v1/ai/plan` | Generate AI task breakdowns | ✅ |
-| **GET**  | `/api/v1/analytics` | Get user productivity metrics | ✅ |
+If the key is missing or a request or JSON parsing fails, the service returns fallback results. Those are not model-generated plans. Review estimates and recommendations before using them.
 
-</details>
+Task data is sent to Google when Gemini is used. The daily plan includes tasks assigned to you and unassigned tasks from your projects. Project health and sprint summary requests include the selected project's task list, including other members' tasks. Don't treat those reports as private to an individual assignee.
 
----
-
-## 🛡️ Authentication
-
-TaskFlow AI features a multi-tiered authentication system ensuring a smooth user experience while maintaining robust security. 
-
-Users can log in via **Email & Password Authentication**, **Google OAuth**, or **Guest Login**. Google users are securely verified on the backend using the `google-auth-library` before a session is granted. All flows converge to issue a signed JSON Web Token (**JWT Authentication**), which is used to guard Protected Routes.
+## Code map
 
 ```text
-[ User ] 
-   │
-   ├─ (A) Traditional Login -> bcrypt.compare()
-   ├─ (B) Google OAuth -> Verify ID Token via google-auth-library
-   ├─ (C) Guest Mode -> Generate temporary user profile
-   ▼
-[ Express API ]
-   │
-   ├─ Generates signed JWT (includes user ID and Email)
-   ▼
-[ Frontend ]
-   │
-   ├─ Stores JWT in LocalStorage
-   ├─ Attaches `Authorization: Bearer <token>` to Axios Interceptor
-   ▼
-[ Protected API Routes ] ── Validates JWT signature ──► [ Access Granted ]
+backend/src/
+  controllers/   Request handlers
+  routes/        API routes
+  services/      Auth, projects, tasks, analytics, and Gemini
+  models/        Mongoose schemas
+  middleware/    Project and task access checks
+  middlewares/   Auth, validation, logging, and error handling
+backend/tests/   Backend regression and utility tests
+frontend/src/
+  pages/         Dashboard, Kanban, analytics, planner, and settings
+  components/    Task cards, AI panel, and shared UI
+  context/       Auth, theme, and notifications
+  services/      API client and request helpers
+dsa-java/        Separate Java scheduling and dependency-graph exercises
 ```
 
----
+The Java exercises aren't wired into the web app.
 
-## 🧠 AI Workflow & Features
+## API entry points
 
-TaskFlow AI seamlessly integrates **Google Gemini** to elevate your workflow from passive tracking to active management.
+All paths below are under `/api/v1`. Protected routes use `Authorization: Bearer <token>`.
 
-**AI Implementation Workflow:**
-1. **User Prompt:** The user inputs a project idea or task description into the AI Planner.
-2. **Backend:** The Express server receives the prompt and constructs an engineered context.
-3. **Gemini:** The `@google/genai` model processes the request.
-4. **JSON Parsing:** The backend extracts and validates the structured JSON response from Gemini.
-5. **Task Suggestions:** The parsed array of sub-tasks, complete with estimated effort and priority, is generated.
-6. **Displayed in AI Panel:** The frontend renders the suggestions, allowing the user to seamlessly add them to their Kanban board.
+| Area | Routes |
+| --- | --- |
+| Auth | `POST /auth/register`, `/auth/login`, `/auth/google`, `/auth/guest`; `GET /auth/me` |
+| Projects | `GET/POST /projects`; `GET/PATCH/DELETE /projects/:id` |
+| Sharing | `POST /projects/:id/invite`; `POST /projects/join/:token`; `GET /projects/:id/members`; `DELETE /projects/:id/members/:userId`; `POST /projects/:id/leave` |
+| Tasks | `GET/POST /tasks`; `GET/PATCH/DELETE /tasks/:id`; `POST /tasks/import-ai`; `GET /projects/:projectId/tasks` |
+| Analytics | `GET /analytics/dashboard`, `/analytics/charts` |
+| AI | `POST /ai/task-breakdown`, `/ai/daily-plan`, `/ai/project-health`, `/ai/sprint-summary` |
 
-**Key AI Capabilities:**
-- **AI Task Breakdown:** Automatically splits large objectives into actionable sub-tasks.
-- **Daily Planner:** Generates an optimized daily schedule based on active priorities.
-- **Project Health:** Assesses the current status and risks of your projects.
+See [backend/src/routes](backend/src/routes) for route definitions and [backend/src/controllers](backend/src/controllers) for request handling.
 
-*Privacy Note:* Within collaborative projects, the AI context window explicitly exposes only **your assigned tasks** and **unassigned tasks**. It never exposes your teammates' assigned tasks, ensuring strict privacy isolation.
+## Current limits
 
----
+- Guest login creates a database record. There is no automatic guest-account cleanup.
+- The app needs the backend and MongoDB for persisted data. There is no offline mode.
+- Personal dashboard counts include tasks assigned to you or created by you in active projects. That is not the same as showing only assigned tasks.
+- JWTs are stored in browser localStorage. The current auth and access controls should not be read as a security audit or a production-readiness guarantee.
 
-## ⚡ Performance
-
-- **Optimized Rendering:** React components are carefully memorized using `useMemo` and `useCallback` to prevent unnecessary re-renders, especially on the Kanban board.
-- **Reusable Components:** A robust design system built on generic UI components (`Card`, `Button`, `Input`).
-- **Persistent Theme:** Theme preferences, sidebar toggles, and user sessions are instantly hydrated from `localStorage` to prevent UI flicker.
-- **Responsive Layout:** Tailwind's utility-first approach ensures minimal CSS payload while maintaining a pixel-perfect layout across all devices.
-
----
-
-## 🔒 Security
-
-- **JWT Authentication:** Stateless, signed tokens securely manage sessions.
-- **Password Hashing:** `bcrypt` prevents raw passwords from being stored in the database.
-- **Google OAuth Verification:** Backend explicitly verifies Google ID tokens rather than trusting the client.
-- **Route Protection:** Frontend routing and backend middleware enforce strict authorization checks.
-- **Member Authorization Middleware:** Verifies project membership at the request level before granting access to project resources or tasks.
-- **Invite Token Expiry:** Secure, cryptographically generated invite links expire automatically and rotate on demand.
-- **CORS:** Cross-Origin Resource Sharing is strictly configured to only accept requests from the frontend client.
-- **Rate Limiting:** `express-rate-limit` mitigates brute-force attacks on auth endpoints and prevents invite generation spam.
-- **Graceful Shutdown:** The server executes a controlled close on critical exceptions, preventing active requests from being abruptly dropped.
-- **Environment Variables:** Sensitive keys are kept completely out of the source code.
-- **Input Validation:** Zod (Frontend) and Joi/Mongoose (Backend) ensure all inputs are sanitized.
-
----
-
-## 🤝 Collaboration
-
-TaskFlow AI Version 2.0 introduces native multi-player workspace features:
-- **Project Sharing:** Easily share workspaces with other users.
-- **Invite Links:** Generate secure tokens to securely onboard members.
-- **Member Management:** Project creators can view and remove members on demand.
-- **Task Assignment:** Tasks can be explicitly assigned to project members to eliminate workflow ambiguity.
-- **Activity Tracking:** A detailed audit log tracks core project lifecycle events (joins, leaves, task creation, assignments, and completions).
-
----
-
-## 📸 Screenshots
-
-*UI previews of TaskFlow AI.*
-
-### Dashboard
-![Dashboard](docs/images/dashboard.png)
-
-### Kanban Board
-![Kanban](docs/images/kanban.png)
-
-### Analytics
-![Analytics](docs/images/analytics.png)
-
-### AI Planner
-![AI Planner](docs/images/ai-planner.png)
-
-### Login
-![Login](docs/images/login.png)
-
-### Register
-![Register](docs/images/register.png)
-
-### Settings
-![Settings](docs/images/settings.png)
-
----
-
-## 🚀 Deployment
-
-The platform is designed to be easily deployed to modern cloud providers:
-
-- **Frontend:** Vercel (Recommended for Vite/React applications)
-- **Backend:** Render or Heroku (Node.js/Express)
-- **Database:** MongoDB Atlas (Cloud database)
-
-*Ensure all environment variables from `.env` are configured in your deployment platform's dashboard.*
-
----
-
-## 📈 Future Vision & Roadmap
-
-- [x] **Collaborative Projects:** Invite links, task assignment, and shared workspaces (Released in v2.0).
-- [x] **Data Privacy Isolation:** Analytics and AI models isolate data by assignee (Released in v2.0).
-
-- [ ] **Real-time Collaboration:** WebSockets for live Kanban board updates across teams.
-- [ ] **Team Workspaces:** Role-based access control (Admin, Member, Viewer).
-- [ ] **AI Chat Assistant:** A sidebar AI agent to query project status.
-- [ ] **Google Calendar Sync:** Two-way synchronization for deadlines.
-- [ ] **Slack Integration:** Push notifications for task updates.
-
----
-
-## ⚠️ Known Limitations
-
-- **Guest Accounts:** Guest sessions are permanent in the database until manually cleaned up. Future updates will introduce an automated cron job to purge inactive guest accounts.
-- **Offline Support:** The application currently requires an active internet connection to interact with the database and AI features.
-
----
-
-## 🧗 Challenges Faced
-
-- **Authentication Architecture:** Designing a seamless system that elegantly handles traditional logins, Google OAuth linking, and temporary Guest sessions without compromising the data model.
-- **Gemini Model Compatibility:** Parsing unstructured text responses from the AI into strictly typed JSON objects required careful prompt engineering and fallback validation.
-- **Environment Variable Management:** Managing separate environments for frontend builds (Vite) and backend servers required a disciplined approach to avoid leaking secrets.
-
----
-
-## 🌟 Project Highlights
-
-- **Modern SaaS UI:** A beautiful, responsive interface designed to feel like a premium SaaS product (e.g., Linear, Vercel).
-- **Google OAuth & JWT:** A robust, hybrid authentication architecture built for scale.
-- **AI-First Project Management:** Moving beyond manual task entry by integrating Google Gemini for automated planning.
-- **Drag & Drop Kanban:** A fluid, native-feeling task management experience built on modern React principles.
-
----
-
-## 🤝 Contributing
-
-Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. **Fork the Project**
-2. **Create your Feature Branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your Changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to the Branch** (`git push origin feature/AmazingFeature`)
-5. **Open a Pull Request**
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## 👨‍💻 Developer
-
-<div align="center">
-  <h3>Made with ❤️ by Sanskar Kharya</h3>
-  
-  <p>
-    <a href="https://github.com/MaybeSomeone-arc18"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
-    <a href="#"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-    <a href="#"><img src="https://img.shields.io/badge/Portfolio-2563EB?style=for-the-badge&logo=react&logoColor=white" alt="Portfolio" /></a>
-    <a href="mailto:contact@example.com"><img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" /></a>
-  </p>
-
-  <br/>
-
-  <!-- Extras Section -->
-  <img src="https://komarev.com/ghpvc/?username=MaybeSomeone-arc18&label=Profile%20Views&color=0e75b6&style=flat" alt="Visitor Counter" />
-  
-  <br/><br/>
-  
-  
-  <br/><br/>
- 
-
-</div>
+Bugs and small improvements are welcome. Include the steps to reproduce a bug, and run the checks above before opening a PR.
