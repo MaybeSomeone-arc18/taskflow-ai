@@ -50,6 +50,7 @@ export const getTasks = async (
   const total = await Task.countDocuments(query);
   const tasks = await Task.find(query)
     .populate('assignedTo', 'fullName email avatarUrl')
+    .populate('createdBy', 'fullName email avatarUrl')
     .sort(sort)
     .skip(skip)
     .limit(limit);
@@ -62,14 +63,14 @@ export const getTasks = async (
 };
 
 export const getTaskById = async (id: string): Promise<ITask | null> => {
-  return Task.findById(id).populate('assignedTo', 'fullName email avatarUrl');
+  return Task.findById(id).populate('assignedTo', 'fullName email avatarUrl')
+    .populate('createdBy', 'fullName email avatarUrl');
 };
 
 export const updateTask = async (id: string, updateData: Partial<ITask>): Promise<ITask | null> => {
-  return Task.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate(
-    'assignedTo',
-    'fullName email avatarUrl'
-  );
+  return Task.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+    .populate('assignedTo', 'fullName email avatarUrl')
+    .populate('createdBy', 'fullName email avatarUrl');
 };
 
 export const deleteTask = async (id: string): Promise<ITask | null> => {

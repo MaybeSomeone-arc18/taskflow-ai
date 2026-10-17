@@ -24,6 +24,7 @@ export const TaskCard: React.FC<TaskCardProps> = React.memo(({
   onStatusChange,
 }) => {
   const overdue = isOverdue(task.dueDate) && task.status !== 'Completed';
+  const creator = typeof task.createdBy === 'object' && task.createdBy !== null ? task.createdBy : null;
 
   return (
     <motion.div 
@@ -127,6 +128,12 @@ export const TaskCard: React.FC<TaskCardProps> = React.memo(({
             </span>
           ))}
         </div>
+      )}
+
+      {creator && (
+        <p className="pl-2 text-xs text-content-secondary truncate" title={`Added by ${creator.fullName || creator.email}`}>
+          Added by {creator.fullName || creator.email}
+        </p>
       )}
 
       {/* Footer: Status selector and Avatar */}
