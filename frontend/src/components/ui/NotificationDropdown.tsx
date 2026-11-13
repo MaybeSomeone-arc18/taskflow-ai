@@ -90,6 +90,7 @@ export const NotificationDropdown: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              style={dropdownStyle}
               className="w-80 md:w-[380px] rounded-[18px] border shadow-2xl overflow-hidden origin-top-right flex flex-col max-h-[85vh] glass-surface-panel"
             >
             {/* Header */}

@@ -6,6 +6,7 @@ export interface Notification {
   title: string;
   message: string;
   type: 'project' | 'task' | 'ai' | 'system';
+  taskId?: string;
   isRead: boolean;
   createdAt: string;
   link?: string;
@@ -18,6 +19,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (id: string) => void;
+  removeNotificationsForTask: (taskId: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -70,6 +72,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
+  // Permanently deleted tasks take their stored notifications with them.
+  // Only notifications recorded with a taskId match; older ones without it stay.
+  const removeNotificationsForTask = (taskId: string) => {
+    setNotifications((prev) => prev.filter((n) => n.taskId !== taskId));
+  };
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
@@ -81,6 +89,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        removeNotificationsForTask,
       }}
     >
       {children}

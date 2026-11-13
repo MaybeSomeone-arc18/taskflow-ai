@@ -10,6 +10,7 @@ import {
 } from '../services/taskService';
 import { Project, Task } from '../types';
 import { eventBus } from '../utils/eventBus';
+import { useNotifications } from '../context/NotificationContext';
 import AIPanel from '../components/AIPanel';
 import {
   AlertCircle,
@@ -50,6 +51,7 @@ const TEXTAREA = 'flex w-full rounded-xl border border-border-subtle bg-surface 
 
 export const KanbanBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const { removeNotificationsForTask } = useNotifications();
 
   const [project, setProject] = useState<Project | null>(null);
   const [projLoading, setProjLoading] = useState(true);
@@ -159,6 +161,7 @@ export const KanbanBoard: React.FC = () => {
         title: 'Task Created',
         message: `Task "${createdTask.title}" was successfully added to ${project?.title}.`,
         type: 'task',
+        taskId: createdTask._id,
         link: `/project/${projectId}`
       });
       eventBus.emit('refresh_dashboard');
@@ -181,6 +184,7 @@ export const KanbanBoard: React.FC = () => {
             title: 'Task Completed',
             message: `Task "${t.title}" was marked as completed.`,
             type: 'task',
+            taskId,
             link: `/project/${projectId}`
           });
         }
@@ -214,6 +218,7 @@ export const KanbanBoard: React.FC = () => {
           title: 'Task Completed',
           message: `Task "${updatedTask.title}" was marked as completed.`,
           type: 'task',
+          taskId: selectedTask._id,
           link: `/project/${projectId}`
         });
       }
@@ -231,6 +236,7 @@ export const KanbanBoard: React.FC = () => {
     setActionLoading(true); setActionError(null);
     try {
       await deleteTask(selectedTask._id);
+      removeNotificationsForTask(selectedTask._id);
       eventBus.emit('new_notification', {
         title: 'Task Deleted',
         message: `Task "${selectedTask.title}" was deleted.`,
