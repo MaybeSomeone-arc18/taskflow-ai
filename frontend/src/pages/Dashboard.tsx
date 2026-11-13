@@ -148,7 +148,8 @@ export const Dashboard: React.FC = () => {
       eventBus.emit('new_notification', {
         title: 'Task Created',
         message: `Task "${createdTask.title}" was successfully added.`,
-        type: 'task'
+        type: 'task',
+        taskId: createdTask._id
       });
       eventBus.emit('refresh_analytics');
       setIsCreateTaskOpen(false);
